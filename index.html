@@ -992,6 +992,17 @@
     border-bottom:none;
   }
   a[target="_blank"]:not(.no-ext-cue):hover::after{color:var(--accent)}
+
+  /* Google's reCAPTCHA v3 badge is fixed bottom-right and collides with mobile
+     Safari's bottom toolbar / our sticky nav at narrow widths. Nudge it up. */
+  .grecaptcha-badge{
+    bottom:84px !important;
+  }
+  @media (max-width:520px){
+    .grecaptcha-badge{
+      bottom:96px !important;
+    }
+  }
 </style>
 </head>
 <body>
