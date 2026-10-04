@@ -21,7 +21,7 @@
 <meta name="description" content="Before you sign a Philadelphia lease, check the address: real code violations, rental license status, and 311 complaints — free, no signup, not run by the City.">
 <meta name="keywords" content="Philadelphia apartments, apartments in Philadelphia, Philadelphia apartments for rent, apartment search Philadelphia, Philly apartment hunting, Philadelphia rental license lookup, code violation lookup Philadelphia, check landlord Philadelphia, Philadelphia tenant tool, is my apartment safe Philadelphia">
 <meta name="robots" content="index,follow,max-image-preview:large">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://services.arcgis.com https://phl.carto.com https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com; img-src 'self' data: https://www.google-analytics.com; frame-src https://www.google.com/recaptcha/;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://www.google.com/recaptcha/ https://services.arcgis.com https://phl.carto.com https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com; img-src 'self' data: https://www.google-analytics.com; frame-src https://www.google.com/recaptcha/;">
 <!-- Light is the default, so the browser chrome starts on the paper ground.
      Kept in sync with the active theme by the toggle below; media-scoped
      variants would be wrong here because the theme follows the stored
@@ -302,12 +302,13 @@
   .prophead-actions{display:flex;gap:8px;flex-shrink:0}
 
   /* Tabs */
-  .tabs{display:flex;gap:0;margin:30px 0 0;border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .tabs::-webkit-scrollbar{display:none}
-  .tab{background:transparent;border:none;color:var(--ink-mute);font-family:"Archivo",sans-serif;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.08em;padding:14px 16px;min-height:44px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;touch-action:manipulation;transition:color .15s}
-  .tab:hover{color:var(--ink-dim)}
-  .tab:active{color:var(--accent-soft)}
-  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0;padding:0 0 12px}
+  .tabs-hint{display:none;margin:22px 0 0;padding:10px 14px;border:1px solid rgb(var(--accent-rgb) / .35);border-radius:6px;background:rgb(var(--accent-rgb) / .08);color:var(--accent);font-family:"Archivo",sans-serif;font-weight:700;font-size:13px;letter-spacing:.02em}
+  .tabs-hint:has(+ #tabs:not([style*="none"])):not(.seen){display:block}
+  .tab{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);font-family:"Archivo",sans-serif;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.06em;padding:12px 18px;min-height:48px;cursor:pointer;border-radius:6px;white-space:nowrap;touch-action:manipulation;transition:color .15s,background .15s,border-color .15s}
+  .tab:hover{border-color:var(--accent);color:var(--accent)}
+  .tab:active{background:rgb(var(--accent-rgb) / .15)}
+  .tab.active{background:var(--accent-fill);border-color:var(--accent-fill);color:var(--on-accent)}
 
   /* Panels */
   .pane{display:none;padding:28px 0}
@@ -689,9 +690,8 @@
     .card h3{font-size:10px;letter-spacing:.1em}
     .card .big{font-size:20px}
     .card .note{font-size:10px}
-    .tabs{margin:20px -14px 0;padding:0 14px 0 14px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;background:var(--bg)}
-    .tabs::after{content:'';position:sticky;right:0;top:0;bottom:0;width:32px;min-height:100%;pointer-events:none;background:linear-gradient(90deg,transparent,var(--bg) 90%);flex-shrink:0}
-    .tabs .tab{padding:12px 14px;font-size:11px;letter-spacing:.04em}
+    .tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:12px -14px 0;padding:6px 14px;position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--line)}
+    .tabs .tab{padding:8px 0;min-height:44px;font-size:10.5px;letter-spacing:0;text-align:center;border-radius:5px}
     .pane{padding:20px 0}
     .sec{margin-top:24px}
     .sec h2{font-size:12px;letter-spacing:.1em;margin-bottom:14px}
@@ -741,16 +741,25 @@
   .modal-rtkl-close{background:transparent;border:1px solid var(--line);color:var(--ink-mute);width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;transition:color .15s,border-color .15s;flex-shrink:0}
   .modal-rtkl-close:hover{color:var(--ink);border-color:var(--accent)}
   .modal-rtkl-body{padding:16px 20px 20px}
-  .modal-rtkl-body .rtkl-name-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-  .modal-rtkl-body .rtkl-name-row label{font-family:"Archivo",sans-serif;font-weight:600;font-size:12px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
-  .modal-rtkl-body .rtkl-name-input{flex:1;min-width:180px;background:var(--panel-2);color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:8px 10px;font-family:"IBM Plex Mono",monospace;font-size:16px;outline:none;box-sizing:border-box;box-shadow:inset 0 1px 3px rgb(var(--hard-rgb) / .16)}
-  .modal-rtkl-body .rtkl-name-input:focus{border-color:var(--accent)}
+  .modal-rtkl-body .rtkl-sec{font-family:"Archivo",sans-serif;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-mute);margin:16px 0 8px}
+  .modal-rtkl-body .rtkl-sec:first-child{margin-top:0}
+  .modal-rtkl-body .rtkl-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .modal-rtkl-body .rtkl-f{flex:1 1 140px;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .modal-rtkl-body .rtkl-f.sm{flex:0 1 90px}
+  .modal-rtkl-body .rtkl-f label,.modal-rtkl-body .rtkl-legend{font-family:"Archivo",sans-serif;font-weight:600;font-size:12px;color:var(--ink-mute);letter-spacing:.02em}
+  .modal-rtkl-body input[type=text],.modal-rtkl-body input[type=email],.modal-rtkl-body input[type=tel],.modal-rtkl-body select,.modal-rtkl-body textarea{width:100%;background:var(--panel-2);color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:9px 10px;font-family:"IBM Plex Mono",monospace;font-size:16px;outline:none;box-sizing:border-box;box-shadow:inset 0 1px 3px rgb(var(--hard-rgb) / .16)}
+  .modal-rtkl-body textarea{min-height:200px;font-size:13px;line-height:1.5;resize:vertical}
+  .modal-rtkl-body input:focus,.modal-rtkl-body select:focus,.modal-rtkl-body textarea:focus{border-color:var(--accent)}
+  .modal-rtkl-body .rtkl-opts{display:flex;gap:6px 16px;flex-wrap:wrap;margin-bottom:10px}
+  .modal-rtkl-body .rtkl-opts label{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-family:"IBM Plex Sans",sans-serif;font-size:14px;color:var(--ink);cursor:pointer}
+  .modal-rtkl-body .rtkl-opts input{width:20px;height:20px;margin:0;accent-color:var(--accent)}
+  .modal-rtkl-body .rtkl-affirm{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:4px;background:var(--panel-2);font-family:"IBM Plex Sans",sans-serif;font-size:13px;line-height:1.5;color:var(--ink);cursor:pointer}
+  .modal-rtkl-body .rtkl-affirm input{width:22px;height:22px;margin:1px 0 0;flex-shrink:0;accent-color:var(--accent)}
+  .modal-rtkl-body .rtkl-err{display:none;margin-top:10px;color:var(--bad,#b3261e);font-family:"IBM Plex Mono",monospace;font-size:12px}
   .modal-rtkl-body .rtkl-clear-link{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-mute);cursor:pointer;text-decoration:underline;white-space:nowrap}
   .modal-rtkl-body .rtkl-clear-link:hover{color:var(--accent)}
-  .modal-rtkl-body textarea{width:100%;min-height:320px;background:var(--panel-2);color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:12px;font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.6;resize:vertical;outline:none;box-sizing:border-box;box-shadow:inset 0 1px 3px rgb(var(--hard-rgb) / .16)}
-  .modal-rtkl-body textarea:focus{border-color:var(--accent)}
   .modal-rtkl-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-  .modal-rtkl-actions button{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;min-height:44px;font-family:"Archivo",sans-serif;font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;border-radius:3px;cursor:pointer;touch-action:manipulation;text-decoration:none;border:none;flex:1 1 0;min-width:0}
+  .modal-rtkl-actions button,.modal-rtkl-actions a{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;min-height:44px;font-family:"Archivo",sans-serif;font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;border-radius:3px;cursor:pointer;touch-action:manipulation;text-decoration:none;border:none;flex:1 1 0;min-width:0;box-sizing:border-box}
   .modal-rtkl-copy{background:var(--accent-fill);color:var(--on-accent);transition:background .15s}
   .modal-rtkl-copy:hover{background:var(--accent-fill-hover)}
   .modal-rtkl-print{background:rgb(var(--accent-rgb) / .08);border:1px solid rgb(var(--accent-rgb) / .25) !important;color:var(--accent);transition:background .15s}
@@ -761,19 +770,7 @@
     .modal-rtkl-header{padding:14px 16px 12px}
     .modal-rtkl-header h3{font-size:15px}
     .modal-rtkl-body{padding:12px 16px 16px}
-    .modal-rtkl-body textarea{font-size:11px;min-height:240px}
-    .modal-rtkl-actions button{font-size:12px;padding:10px 14px}
-  }
-  @media print{
-    body.print-rtkl *{display:none!important}
-    body.print-rtkl .modal-rtkl-overlay{display:flex!important;position:static!important;background:none!important;padding:0!important}
-    body.print-rtkl .modal-rtkl-card{display:block!important;box-shadow:none!important;border:none!important;max-width:100%!important;overflow:visible!important;max-height:none!important}
-    body.print-rtkl .modal-rtkl-header{display:none!important}
-    body.print-rtkl .modal-rtkl-body{display:block!important;padding:0!important}
-    body.print-rtkl .modal-rtkl-body .rtkl-name-row{display:none!important}
-    body.print-rtkl .modal-rtkl-body textarea{display:block!important;border:none!important;background:#fff!important;color:#000!important;font-size:12pt!important;min-height:auto!important;height:auto!important;overflow:visible!important;white-space:pre-wrap!important;padding:0!important}
-    body.print-rtkl .modal-rtkl-actions{display:none!important}
-    body.print-rtkl .modal-rtkl-note{display:none!important}
+    .modal-rtkl-actions button,.modal-rtkl-actions a{font-size:12px;padding:10px 14px}
   }
   /* Print / PDF — brief tab only */
   .print-brief-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--ink-dim);border:1px solid var(--line);padding:0 14px;min-height:44px;font-family:"Archivo",sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:color .15s,border-color .15s;touch-action:manipulation;margin-bottom:18px}
@@ -1016,7 +1013,7 @@
     <div>
       <div class="brand">
         <div class="brand-mark" role="button" tabindex="0" aria-label="4PHILLY — reset and return to lookup">4<span>PHILLY</span></div>
-        <span style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.06em;padding:2px 7px;border-radius:2px;background:rgb(var(--accent-rgb) / .12);color:var(--accent);border:1px solid rgb(var(--accent-rgb) / .35);text-transform:uppercase;vertical-align:middle;line-height:1.4">v4.1</span>
+        <span style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.06em;padding:2px 7px;border-radius:2px;background:rgb(var(--accent-rgb) / .12);color:var(--accent);border:1px solid rgb(var(--accent-rgb) / .35);text-transform:uppercase;vertical-align:middle;line-height:1.4">v4.4</span>
         <div class="brand-tag"> A Tenants App for Philadelphia Properties - made easy.</div>
       </div>
       <div class="gov-disclaimer" role="note">
@@ -1032,7 +1029,7 @@
     </div>
     <div class="top-meta">
       <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle light or dark theme" title="Toggle light / dark">☾ Dark</button>
-      <div>build <span class="mono">4.1</span></div>
+      <div>build <span class="mono">4.4</span></div>
       <div>pulled <span id="now" class="mono">—</span></div>
     </div>
   </header>
@@ -1293,6 +1290,7 @@
     <div class="score-breakdown" id="score-breakdown"></div>
   </div>
 
+  <div class="tabs-hint" id="tabs-hint" aria-hidden="true">↓ Tap a tab to explore this address: Inspect · Drift · Brief · Records · Limits · Council</div>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Property record views" style="display:none">
     <button class="tab active" data-tab="inspect" role="tab" id="tab-inspect" aria-controls="pane-inspect" aria-selected="true">Inspect</button>
     <button class="tab" data-tab="drift" role="tab" id="tab-drift" aria-controls="pane-drift" aria-selected="false" tabindex="-1">Drift</button>
@@ -1410,7 +1408,7 @@
   <div style="border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--panel);text-align:center;margin-top:16px">
     <img src="how-it-works.svg" alt="4PHILLY data flow diagram: an address or OPA number resolves through OPA lookup into two parallel sources, the authoritative Eclipse ArcGIS system and the historical Carto SQL mirror, which are compared by a drift comparator to produce a unified record with drift flags, while OPA data also resolves the council district to surface the councilmember and any L&amp;I Committee flag" style="max-width:100%;width:640px;display:block;margin:0 auto" loading="lazy">
   </div>
-  <div class="footer-disc">4PHILLY v4.1 — open-source civic tool. Verify any claim before relying on it. No warranty.</div>
+  <div class="footer-disc">4PHILLY v4.4 — open-source civic tool. Verify any claim before relying on it. No warranty.</div>
 </footer>
 
 </div><!-- /wrap -->
@@ -1426,33 +1424,79 @@
       <textarea id="modal-311-text" readonly></textarea>
       <div class="modal-311-actions">
         <button class="modal-311-copy" id="modal-311-copy">Copy text</button>
-        <a class="modal-311-open311" href="https://www.phila.gov/services/property-lots-housing/report-a-property-code-violation/" target="_blank" rel="noopener" id="modal-311-open">Open 311 site</a>
+        <a class="modal-311-open311" href="https://www.phila.gov/services/property-lots-housing/report-a-problem-with-a-building-lot-or-street/" target="_blank" rel="noopener" id="modal-311-open">Open 311 site</a>
       </div>
       <div class="modal-311-note">Copy the complaint text first, then open the 311 site and paste it into the description field.</div>
     </div>
   </div>
 </div>
 
-<!-- RTKL Request Modal -->
-<div id="modal-rtkl" class="modal-rtkl-overlay no-print" style="display:none" role="dialog" aria-modal="true" aria-label="Generate RTKL Request">
+<!-- RTKL Request Modal: fills the official PA OOR Standard Right-to-Know Law Request Form -->
+<div id="modal-rtkl" class="modal-rtkl-overlay no-print" style="display:none" role="dialog" aria-modal="true" aria-label="Right-to-Know Law request">
   <div class="modal-rtkl-card">
     <div class="modal-rtkl-header">
-      <h3>Generate RTKL Request</h3>
+      <h3>Right-to-Know Request (official PA form)</h3>
       <button class="modal-rtkl-close" id="modal-rtkl-close" aria-label="Close">&times;</button>
     </div>
-    <div class="modal-rtkl-body">
-      <div class="rtkl-name-row">
-        <label for="rtkl-name-input">Your name</label>
-        <input type="text" class="rtkl-name-input" id="rtkl-name-input" placeholder="Enter your full name" autocomplete="name">
-        <span class="rtkl-clear-link" id="rtkl-clear-name">Clear my data</span>
+    <form class="modal-rtkl-body" id="rtk-form" autocomplete="on" novalidate>
+      <div class="rtkl-sec">Submitted to</div>
+      <div class="rtkl-row">
+        <div class="rtkl-f" style="flex-basis:260px"><label for="rtk-agency">Agency (Attn: AORO)</label><input type="text" id="rtk-agency" value="City of Philadelphia, Department of Licenses and Inspections"></div>
+        <div class="rtkl-f"><label for="rtk-via">Submitting via</label><select id="rtk-via"><option value="email">Email</option><option value="mail">U.S. Mail</option><option value="fax">Fax</option><option value="person">In person</option></select></div>
       </div>
-      <textarea id="modal-rtkl-text"></textarea>
+      <div class="rtkl-sec">Person making request</div>
+      <div class="rtkl-row">
+        <div class="rtkl-f"><label for="rtk-name">Full name *</label><input type="text" id="rtk-name" autocomplete="name" placeholder="Your full legal name"></div>
+        <div class="rtkl-f"><label for="rtk-company">Company (optional)</label><input type="text" id="rtk-company" autocomplete="organization"></div>
+      </div>
+      <div class="rtkl-row">
+        <div class="rtkl-f"><label for="rtk-email">Email</label><input type="email" id="rtk-email" autocomplete="email" inputmode="email"></div>
+        <div class="rtkl-f"><label for="rtk-phone">Telephone</label><input type="tel" id="rtk-phone" autocomplete="tel" inputmode="tel"></div>
+      </div>
+      <div class="rtkl-row"><div class="rtkl-f"><label for="rtk-addr">Mailing address</label><input type="text" id="rtk-addr" autocomplete="street-address"></div></div>
+      <div class="rtkl-row">
+        <div class="rtkl-f"><label for="rtk-city">City</label><input type="text" id="rtk-city" value="Philadelphia" autocomplete="address-level2"></div>
+        <div class="rtkl-f sm"><label for="rtk-state">State</label><input type="text" id="rtk-state" value="PA" maxlength="2" autocomplete="address-level1"></div>
+        <div class="rtkl-f sm"><label for="rtk-zip">Zip</label><input type="text" id="rtk-zip" maxlength="10" inputmode="numeric" autocomplete="postal-code"></div>
+      </div>
+      <div class="rtkl-row">
+        <div class="rtkl-f"><label for="rtk-resp">Send the response via</label><select id="rtk-resp"><option value="email">Email</option><option value="mail">U.S. Mail</option></select></div>
+        <div class="rtkl-f"><label for="rtk-contact">If the agency has questions, contact me by</label><select id="rtk-contact"><option value="email">Email</option><option value="phone">Telephone</option><option value="mail">U.S. Mail</option></select></div>
+      </div>
+      <label class="rtkl-affirm"><input type="checkbox" id="rtk-affirm"><span>I affirm that my full name and contact information is true and correct, and that I am a legal resident of the United States. (The form says failing to check this may get the request denied and any appeal dismissed.)</span></label>
+
+      <div class="rtkl-sec">Records requested</div>
+      <textarea id="rtk-records" aria-label="Records requested"></textarea>
+
+      <div class="rtkl-sec">Copies and fees</div>
+      <div class="rtkl-legend">Do you want copies?</div>
+      <div class="rtkl-opts" role="radiogroup" aria-label="Copies">
+        <label><input type="radio" name="rtk-copies" value="electronic" checked> Yes, electronic</label>
+        <label><input type="radio" name="rtk-copies" value="printed"> Yes, printed</label>
+        <label><input type="radio" name="rtk-copies" value="inspect"> No, in-person inspection</label>
+      </div>
+      <div class="rtkl-legend">Notify me before processing if fees will be more than</div>
+      <div class="rtkl-opts" role="radiogroup" aria-label="Fee limit">
+        <label><input type="radio" name="rtk-fee" value="100" checked> $100</label>
+        <label><input type="radio" name="rtk-fee" value="custom"> Other: $<input type="text" id="rtk-fee-amt" inputmode="decimal" style="width:90px;min-height:36px" aria-label="Fee limit amount"></label>
+      </div>
+      <div class="rtkl-legend">Certified copies?</div>
+      <div class="rtkl-opts" role="radiogroup" aria-label="Certified copies">
+        <label><input type="radio" name="rtk-cert" value="no" checked> No</label>
+        <label><input type="radio" name="rtk-cert" value="yes"> Yes (may cost extra)</label>
+      </div>
+
+      <div class="rtkl-err" id="rtk-err" role="alert"></div>
       <div class="modal-rtkl-actions">
-        <button class="modal-rtkl-copy" id="modal-rtkl-copy">Copy letter</button>
-        <button class="modal-rtkl-print" id="modal-rtkl-print">Print letter</button>
+        <button type="button" class="modal-rtkl-copy" id="rtk-download">Download filled PDF</button>
+        <button type="button" class="modal-rtkl-print" id="rtk-copy-records">Copy records text</button>
       </div>
-      <div class="modal-rtkl-note">Edit the letter above if needed. Before sending, confirm the current L&amp;I Open Records Officer's mailing address and email at <a href="https://www.phila.gov/open-records-policy/" target="_blank" rel="noopener noreferrer">phila.gov/open-records-policy</a> — the office holder and contact details can change.</div>
-    </div>
+      <div class="modal-rtkl-actions" style="margin-top:8px">
+        <a class="modal-rtkl-print" href="forms/RTKRequestForm.pdf" target="_blank" rel="noopener">Blank official form</a>
+        <button type="button" class="rtkl-clear-link" id="rtkl-clear-name" style="background:none;border:none;align-self:center;text-align:center">Clear my data</button>
+      </div>
+      <div class="modal-rtkl-note">This is the Pennsylvania Office of Open Records Standard Right-to-Know Law Request Form, filled in on your device &mdash; nothing is uploaded. Only your name is remembered here, and "Clear my data" removes it. Keep a copy of both pages. Send it to the L&amp;I Open Records Officer &mdash; confirm the current address and email at <a href="https://www.phila.gov/open-records-policy/" target="_blank" rel="noopener noreferrer">phila.gov/open-records-policy</a>. The agency has five business days to respond; if denied or deemed denied you have 15 business days to appeal to the Office of Open Records.</div>
+    </form>
   </div>
 </div>
 
@@ -1948,9 +1992,21 @@ async function get311ForAddress(loc){
   const tokens=base.split(' ').filter(Boolean);
   const keyTokens=tokens.filter(t=>!SKIP.has(t));
   if(!keyTokens.length) return [];
-  const loosePat='%'+keyTokens.join('%')+'%';
-  const fullPat='%'+tokens.join('%')+'%';
-  const patterns=[...new Set([loosePat,fullPat])];
+  let patterns;
+  if(/^\d+$/.test(keyTokens[0])){
+    // Anchor the house number: a leading wildcard made "315 N 12TH" also match 3150 and 1315 N 12TH.
+    const rest=keyTokens.slice(1).join('%');
+    const rng=String(loc||"").trim().match(/^(\d+)\s*-\s*(\d+)\b/);
+    let nums=[keyTokens[0]];
+    if(rng){
+      const a=+rng[1], bs=rng[2], b=bs.length<rng[1].length?+(rng[1].slice(0,rng[1].length-bs.length)+bs):+bs;
+      if(b>a&&b-a<=40) for(let n=a+2;n<=b&&nums.length<12;n+=2) nums.push(String(n));
+    }
+    // number must be followed by a space or hyphen, so 315 can't match 3150
+    patterns=nums.flatMap(n=>[n+' %'+rest+'%',n+'-%'+rest+'%']);
+  } else {
+    patterns=[...new Set(['%'+keyTokens.join('%')+'%','%'+tokens.join('%')+'%'])];
+  }
   const since=new Date(Date.now()-1000*60*60*24*730).toISOString().slice(0,10);
   const results=await Promise.all(patterns.map(p=>
     cartoQuery(`SELECT cartodb_id,requested_datetime,service_name,status,agency_responsible,subject,address FROM public_cases_fc WHERE UPPER(address) LIKE '${sqlSafeStr(p)}' AND requested_datetime >= '${since}' ORDER BY requested_datetime DESC LIMIT 500`).catch(e=>{console.warn('311 query failed:',e);return [];})
@@ -2252,6 +2308,7 @@ function showRecordChrome(el,display){
 function renderProphead(opa, opaRow){
   showRecordChrome($("#prophead"),"block");
   showRecordChrome($("#tabs"),"");
+  $("#tabs-hint").classList.remove("seen");
   switchTab(currentTab);
   $("#ph-addr").textContent=opaRow?.location||`OPA ${opa}`;
   $("#ph-opa").textContent=opa;
@@ -2768,7 +2825,7 @@ function renderBrief({opaRow,lic,licenseSummary,openViol,allViol,t311}){
     verdict=`<b>${rentalSummary.activeCount} of ${rentalSummary.count} rental-type license(s) are currently active.</b> This parcel has <b>${allSummary.count}</b> total license record(s) on file across all types — review each row below to verify the unit or use you care about is covered${expDate?` (primary rental-type record expires ${expDate})`:""}.`;
     vclass="good";
   } else {
-    verdict=`<b>All ${rentalSummary.count} rental-type license record(s) on file are active.</b> Eclipse also lists <b>${allSummary.count}</b> total license record(s) including non-rental types (high-rise, food service, etc.).${expDate?` Primary rental-type expiration: ${expDate}.`:""}`;
+    verdict=`<b>All ${rentalSummary.count} rental-type license record(s) on file are active.</b> <b>${allSummary.count}</b> license record(s) are on file in total (Eclipse plus the City open-data mirror), including non-rental types (high-rise, food service, etc.).${expDate?` Primary rental-type expiration: ${expDate}.`:""}`;
     vclass="good";
   }
 
@@ -2897,43 +2954,28 @@ function close311Modal(){
   });
 })();
 
-// ---- RTKL Request Modal ----
-function buildRTKLLetter(addr,opa,caseNums,tenantName){
-  const today=new Date();
-  const dateStr=today.toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
-  const caseList=caseNums.length>0?caseNums.join(", "):"(no case numbers on file)";
-  let letter=dateStr+"\n\n";
-  letter+="Open Records Officer\n";
-  letter+="Department of Licenses and Inspections\n";
-  letter+="[Mailing address/email — confirm current Open Records Officer contact at phila.gov/open-records-policy before sending]\n\n";
-  letter+="Re: Right-to-Know Law Request — 65 P.S. Section 67.702\n";
-  letter+="Property: "+addr+" (OPA "+opa+")\n\n";
-  letter+="Dear Open Records Officer:\n\n";
-  letter+="Pursuant to the Pennsylvania Right-to-Know Law, 65 P.S. Section 67.101 et seq., I hereby request copies of the following records related to the above-referenced property:\n\n";
-  letter+="1. All inspector notes, photographs, and correspondence for case numbers: "+caseList+"\n";
-  letter+="2. All inspection reports and findings\n";
-  letter+="3. All correspondence between L&I and the property owner or management\n";
-  letter+="4. All complaints filed regarding this property\n\n";
-  letter+="Under Section 67.901, you are required to respond within five business days. If I do not receive a response within that time, the request is deemed denied under the law, and I may appeal to the Pennsylvania Office of Open Records within 15 business days pursuant to Section 67.1101.\n\n";
-  letter+="Sincerely,\n";
-  letter+=tenantName||"[YOUR NAME]";
-  return letter;
+// ---- RTKL Request Modal (fills the official OOR PDF form) ----
+function buildRTKRecords(addr,opa,caseNums){
+  const caseList=caseNums.length>0?caseNums.join(", "):"(none listed in the public data)";
+  return "Pursuant to the Pennsylvania Right-to-Know Law, 65 P.S. § 67.101 et seq., I request copies of the following records for the property at "+addr+", Philadelphia, PA (OPA account "+opa+"):\n\n"+
+    "1. All inspector notes, photographs, and correspondence for L&I case numbers: "+caseList+".\n"+
+    "2. All inspection reports and findings for this property.\n"+
+    "3. All correspondence between the Department of Licenses and Inspections and the property owner or management company.\n"+
+    "4. All complaints filed with the Department regarding this property.\n\n"+
+    "Time frame: all dates on file through the date of this request.";
 }
 
 function openRTKLModal(addr,opa,caseNums){
   const modal=document.getElementById("modal-rtkl");
-  const ta=document.getElementById("modal-rtkl-text");
-  const nameInput=document.getElementById("rtkl-name-input");
-  if(!modal||!ta||!nameInput) return;
-  const saved=localStorage.getItem("4p_tenant_name")||"";
-  nameInput.value=saved;
-  ta.value=buildRTKLLetter(addr,opa,caseNums,saved);
+  if(!modal) return;
+  document.getElementById("rtk-name").value=localStorage.getItem("4p_tenant_name")||"";
+  document.getElementById("rtk-records").value=buildRTKRecords(addr,opa,caseNums);
+  document.getElementById("rtk-affirm").checked=false; // must be affirmed fresh for every request
+  const err=document.getElementById("rtk-err"); err.style.display="none";
   modal.style.display="flex";
   document.body.style.overflow="hidden";
-  // Store addr/opa/caseNums for regeneration on name change
-  modal._rtklAddr=addr;
-  modal._rtklOpa=opa;
-  modal._rtklCases=caseNums;
+  modal._rtkOpa=opa;
+  document.getElementById("rtk-name").focus();
 }
 
 function closeRTKLModal(){
@@ -2941,68 +2983,93 @@ function closeRTKLModal(){
   if(!modal) return;
   modal.style.display="none";
   document.body.style.overflow="";
-  document.body.classList.remove("print-rtkl");
+}
+
+function loadScriptOnce(src){
+  return new Promise((res,rej)=>{
+    if(document.querySelector('script[data-lazy="'+src+'"]')) return res();
+    const sc=document.createElement("script");
+    sc.src=src; sc.dataset.lazy=src; sc.onload=res; sc.onerror=()=>rej(new Error("Could not load "+src));
+    document.head.appendChild(sc);
+  });
+}
+
+function readRTKForm(){
+  const v=id=>document.getElementById(id).value.trim();
+  const r=n=>(document.querySelector('input[name="'+n+'"]:checked')||{}).value;
+  const d=new Date();
+  return {
+    agency:v("rtk-agency"),
+    date:String(d.getMonth()+1).padStart(2,"0")+"/"+String(d.getDate()).padStart(2,"0")+"/"+d.getFullYear(),
+    submittedVia:v("rtk-via"),name:v("rtk-name"),company:v("rtk-company"),
+    respondVia:v("rtk-resp"),email:v("rtk-email"),address:v("rtk-addr"),
+    city:v("rtk-city"),state:v("rtk-state").toUpperCase(),zip:v("rtk-zip"),phone:v("rtk-phone"),
+    contactVia:v("rtk-contact"),affirm:document.getElementById("rtk-affirm").checked,
+    records:document.getElementById("rtk-records").value,
+    copies:r("rtk-copies"),feeAck:true,feeCap:r("rtk-fee"),
+    feeAmount:v("rtk-fee-amt").replace(/[^0-9.,]/g,""),certified:r("rtk-cert")
+  };
+}
+
+function rtkProblem(d){
+  if(!d.name) return "Enter your full name.";
+  if(!d.affirm) return "Check the box confirming your name and contact info are true and that you are a U.S. legal resident — the form requires it.";
+  if(d.respondVia==="email"&&!d.email) return "You chose a response by email — enter your email address.";
+  if(d.respondVia==="mail"&&!(d.address&&d.city&&d.state&&d.zip)) return "You chose a response by mail — enter your full mailing address.";
+  if(d.contactVia==="phone"&&!d.phone) return "You chose to be contacted by telephone — enter a phone number.";
+  if(d.feeCap==="custom"&&!d.feeAmount) return "Enter the dollar amount for your fee limit, or pick $100.";
+  if(!d.records.trim()) return "Describe the records you are requesting.";
+  return "";
+}
+
+async function downloadRTKPdf(){
+  const err=document.getElementById("rtk-err");
+  const d=readRTKForm();
+  const prob=rtkProblem(d);
+  if(prob){ err.textContent=prob; err.style.display="block"; return; }
+  err.style.display="none";
+  const btn=document.getElementById("rtk-download");
+  const label=btn.textContent; btn.disabled=true; btn.textContent="Filling form…";
+  try{
+    await loadScriptOnce("lib/pdf-lib.min.js");
+    await loadScriptOnce("lib/rtk-fill.js");
+    const resp=await fetch("forms/RTKRequestForm.pdf");
+    if(!resp.ok) throw new Error("official form unavailable ("+resp.status+")");
+    const out=await window.RtkForm.fill(window.PDFLib,await resp.arrayBuffer(),d);
+    if(out.overflow){ err.textContent="Your records text is too long for the form's two boxes. Shorten it, or attach extra pages as the form allows."; err.style.display="block"; return; }
+    const url=URL.createObjectURL(new Blob([out.bytes],{type:"application/pdf"}));
+    const a=document.createElement("a");
+    a.href=url; a.download="RTK-Request-"+(document.getElementById("modal-rtkl")._rtkOpa||"property")+".pdf";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    if(d.name) localStorage.setItem("4p_tenant_name",d.name);
+    showCopyToast("Official RTK form downloaded");
+  }catch(e){
+    err.textContent=e.userMessage||("Couldn't build the PDF: "+e.message+". You can still use \"Blank official form\" and copy the records text.");
+    err.style.display="block";
+  }finally{ btn.disabled=false; btn.textContent=label; }
 }
 
 (function initRTKLModal(){
-  // Name input: save to localStorage and regenerate letter
-  const nameInput=document.getElementById("rtkl-name-input");
-  if(nameInput){
-    nameInput.addEventListener("input",function(){
-      const name=this.value.trim();
-      if(name) localStorage.setItem("4p_tenant_name",name);
-      const modal=document.getElementById("modal-rtkl");
-      const ta=document.getElementById("modal-rtkl-text");
-      if(modal&&ta&&modal._rtklAddr){
-        ta.value=buildRTKLLetter(modal._rtklAddr,modal._rtklOpa,modal._rtklCases,name);
-      }
-    });
-  }
-
   document.addEventListener("click",function(e){
-    if(e.target.id==="modal-rtkl-close") closeRTKLModal();
-    if(e.target.id==="modal-rtkl") closeRTKLModal();
-
+    if(e.target.id==="modal-rtkl-close"||e.target.id==="modal-rtkl") closeRTKLModal();
+    if(e.target.id==="rtk-download") downloadRTKPdf();
     if(e.target.id==="rtkl-clear-name"){
       localStorage.removeItem("4p_tenant_name");
-      const ni=document.getElementById("rtkl-name-input");
-      if(ni) ni.value="";
-      const modal=document.getElementById("modal-rtkl");
-      const ta=document.getElementById("modal-rtkl-text");
-      if(modal&&ta&&modal._rtklAddr){
-        ta.value=buildRTKLLetter(modal._rtklAddr,modal._rtklOpa,modal._rtklCases,"");
-      }
+      document.getElementById("rtk-name").value="";
       showCopyToast("Saved name cleared");
     }
-
-    if(e.target.id==="modal-rtkl-copy"){
-      const ta=document.getElementById("modal-rtkl-text");
-      if(!ta) return;
+    if(e.target.id==="rtk-copy-records"){
+      const ta=document.getElementById("rtk-records");
       navigator.clipboard.writeText(ta.value).then(function(){
-        showCopyToast("RTKL letter copied to clipboard");
+        showCopyToast("Records text copied");
       }).catch(function(){
         ta.select();
         document.execCommand("copy");
-        showCopyToast("RTKL letter copied");
+        showCopyToast("Records text copied");
       });
     }
-
-    if(e.target.id==="modal-rtkl-print"){
-      const ta=document.getElementById("modal-rtkl-text");
-      if(ta){
-        // Auto-size textarea to content for print
-        ta.style.height="auto";
-        ta.style.height=ta.scrollHeight+"px";
-      }
-      document.body.classList.add("print-rtkl");
-      setTimeout(function(){
-        window.print();
-        document.body.classList.remove("print-rtkl");
-        if(ta) ta.style.height="";
-      },100);
-    }
   });
-
   document.addEventListener("keydown",function(e){
     if(e.key==="Escape"){
       const modal=document.getElementById("modal-rtkl");
@@ -3022,7 +3089,7 @@ function renderPermits(rows){
   const permitYear=p=>{
     const d=p.permitissuedate;
     if(typeof d==="string"){ const m=d.trim().match(/^(\d{4})-/); if(m) return m[1]; }
-    if(typeof d==="number"&&d>0){ const y=new Date(d).getFullYear(); if(!isNaN(y)) return String(y); }
+    if(typeof d==="number"&&d>0){ const y=new Date(d).getUTCFullYear(); if(!isNaN(y)) return String(y); }
     return "Undated";
   };
   const sorted=rows.slice().sort((a,b)=>{
@@ -3195,7 +3262,7 @@ var LEGAL_AID = [
   {name:"Philadelphia VIP", phone:"215-523-9550", url:"https://phillyvip.org", issues:["housing"]},
   {name:"ACLU of Pennsylvania", phone:"215-592-1513", url:"https://aclupa.org", issues:["discrimination","retaliation"]},
   {name:"Fair Housing Commission", phone:"215-686-4670", url:"https://www.phila.gov/departments/fair-housing-commission/", issues:["discrimination","housing"]},
-  {name:"Commission on Human Relations", phone:"215-686-4670", url:"https://www.phila.gov/departments/commission-on-human-relations/", issues:["discrimination"]}
+  {name:"Commission on Human Relations", phone:"215-686-4670", url:"https://www.phila.gov/departments/philadelphia-commission-on-human-relations/", issues:["discrimination"]}
 ];
 
 var ZIP_RANKINGS = [
@@ -3497,7 +3564,7 @@ function renderSavedBar(){
 }
 
 // ---- Tab switching ----
-function switchTab(which){
+function switchTab(which,fromUser){
   if(!TABS.includes(which)) return;
   currentTab=which;
   $$(".tab").forEach(x=>{
@@ -3511,12 +3578,17 @@ function switchTab(which){
   $$(".pane").forEach(p=>p.classList.remove("active"));
   const pane=$("#pane-"+which);
   if(pane) pane.classList.add("active");
-  window.scrollTo({top:0,behavior:"instant"});
+  if(fromUser){
+    // land on the top of the new pane with the tab bar still in view (works sticky or not)
+    const tb=$("#tabs"), pc=$("#pane-container");
+    if(tb&&pc) window.scrollTo({top:Math.max(0,pc.getBoundingClientRect().top+window.scrollY-tb.offsetHeight-8),behavior:"instant"});
+  }
+  else window.scrollTo({top:0,behavior:"instant"});
 }
 
 $("#tabs").addEventListener("click",e=>{
   const t=e.target.closest(".tab");
-  if(t) switchTab(t.dataset.tab);
+  if(t){ $("#tabs-hint").classList.add("seen"); switchTab(t.dataset.tab,true); }
 });
 
 // Keyboard support for the tablist (WAI-ARIA: Left/Right/Home/End move + focus)
@@ -3529,29 +3601,10 @@ $("#tabs").addEventListener("keydown",e=>{
   else if(e.key==="End") next=TABS.length-1;
   if(next<0) return;
   e.preventDefault();
-  switchTab(TABS[next]);
+  switchTab(TABS[next],true);
   const btn=$("#tab-"+TABS[next]);
   if(btn) btn.focus();
 });
-
-// ---- Swipe ----
-(function initSwipe(){
-  const container=$("#pane-container");
-  if(!container) return;
-  let startX=0,startY=0;
-  container.addEventListener("touchstart",e=>{
-    startX=e.touches[0].clientX;
-    startY=e.touches[0].clientY;
-  },{passive:true});
-  container.addEventListener("touchend",e=>{
-    const dx=e.changedTouches[0].clientX-startX;
-    const dy=e.changedTouches[0].clientY-startY;
-    if(Math.abs(dx)<80||Math.abs(dx)<Math.abs(dy)*1.5) return;
-    const idx=TABS.indexOf(currentTab);
-    if(dx<0&&idx<TABS.length-1) switchTab(TABS[idx+1]);
-    if(dx>0&&idx>0) switchTab(TABS[idx-1]);
-  },{passive:true});
-})();
 
 // ---- Star button ----
 $("#star-btn").addEventListener('click',()=>{
