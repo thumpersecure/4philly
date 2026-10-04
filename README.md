@@ -23,7 +23,7 @@ One unified Philadelphia property record. Type any address or OPA number — get
 Every data point is pulled from **Eclipse** (the authoritative L&I backend behind `li.phila.gov`) *and* **Carto** (the historical open-data mirror at `phl.carto.com`). When they disagree, 4PHILLY flags it. Eclipse always wins.
 
 > [!NOTE]
-> 4PHILLY runs entirely in your browser. No server. No analytics. No account. Your lookups don't leave your device except to hit the city's public APIs.
+> 4PHILLY runs entirely in your browser. No server of our own. No account. Your lookups don't leave your device except to hit the city's public APIs.
 
 -----
 
