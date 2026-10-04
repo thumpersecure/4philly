@@ -653,6 +653,20 @@
   .impact-foot b{color:var(--ink)}
   @media(min-width:640px){.impact-cols{grid-template-columns:1fr 1fr;gap:36px}}
   @media(max-width:679px){.impact-hero{padding:28px 20px;margin:24px 0 8px}.impact-h{font-size:22px}.impact-lede{font-size:15px;margin-bottom:26px}}
+
+  /* From-the-blog links — same banner pattern as impact-hero, sits just
+     above the footer so it reads as "more reading" before the fine print. */
+  .blog-links{margin:12px 0 32px}
+  .blog-links-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:16px}
+  .blog-links-head h2{font-family:"Archivo",sans-serif;font-size:20px;font-weight:800;color:var(--ink);margin:0;letter-spacing:-.01em}
+  .blog-links-head a{font-family:"IBM Plex Mono",monospace;font-size:12.5px;letter-spacing:.04em;color:var(--ink-mute);white-space:nowrap}
+  .blog-links-head a:hover{color:var(--accent)}
+  .blog-links-grid{display:grid;grid-template-columns:1fr;gap:14px}
+  .blog-link-card{display:block;padding:16px 18px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:6px;color:var(--ink);transition:border-color .15s,background .15s}
+  .blog-link-card:hover{border-color:var(--accent);background:var(--panel-2);border-bottom-color:var(--accent)}
+  .blog-link-card h3{font-family:"Archivo",sans-serif;font-size:15.5px;font-weight:700;margin:0 0 6px;color:var(--ink)}
+  .blog-link-card p{font-size:13.5px;line-height:1.5;color:var(--ink-dim);margin:0}
+  @media(min-width:640px){.blog-links-grid{grid-template-columns:1fr 1fr 1fr}}
   /* Theme toggle */
   .theme-toggle{background:var(--panel-2);color:var(--ink-dim);border:1px solid var(--line);border-radius:20px;font-family:"IBM Plex Mono",monospace;font-size:11px;padding:5px 12px;cursor:pointer;margin-bottom:8px;white-space:nowrap;transition:color .15s,border-color .15s}
   .theme-toggle:hover{color:var(--ink);border-color:var(--accent)}
@@ -1372,6 +1386,27 @@
         </div>
       </div>
       <p class="impact-foot">Built for Philadelphia renters and tenants. <b>No account, no cost, no catch</b> &mdash; just the truth about your address before you sign or when you need to fight back.</p>
+    </div>
+  </section>
+
+  <section id="blog-links" class="blog-links" aria-label="Guides and articles">
+    <div class="blog-links-head">
+      <h2>From the blog</h2>
+      <a href="blog/">All guides &amp; articles &rarr;</a>
+    </div>
+    <div class="blog-links-grid">
+      <a class="blog-link-card" href="blog/pre-lease-check.html">
+        <h3>Before you sign a lease, run this free search</h3>
+        <p>How 4philly turns three scattered city systems into one landlord check.</p>
+      </a>
+      <a class="blog-link-card" href="blog/records-contradiction.html">
+        <h3>Philadelphia can't tell you if your landlord is licensed</h3>
+        <p>Four city websites, four answers about the same rental license.</p>
+      </a>
+      <a class="blog-link-card" href="blog/worst-landlords.html">
+        <h3>Philadelphia's worst landlords, ranked</h3>
+        <p>Two live rankings straight from the City's own open data.</p>
+      </a>
     </div>
   </section>
 
