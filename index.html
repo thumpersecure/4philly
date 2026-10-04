@@ -21,7 +21,7 @@
 <meta name="description" content="Before you sign a Philadelphia lease, check the address: real code violations, rental license status, and 311 complaints — free, no signup, not run by the City.">
 <meta name="keywords" content="Philadelphia apartments, apartments in Philadelphia, Philadelphia apartments for rent, apartment search Philadelphia, Philly apartment hunting, Philadelphia rental license lookup, code violation lookup Philadelphia, check landlord Philadelphia, Philadelphia tenant tool, is my apartment safe Philadelphia">
 <meta name="robots" content="index,follow,max-image-preview:large">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://tpc.googlesyndication.com https://*.adtrafficquality.google https://googleads.g.doubleclick.net https://www.googletagservices.com https://partner.googleadservices.com https://www.google.com/pagead/ https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://pagead2.googlesyndication.com https://*.adtrafficquality.google https://googleads.g.doubleclick.net https://www.google.com/recaptcha/ https://services.arcgis.com https://phl.carto.com https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com; img-src 'self' data: https://www.googletagmanager.com https://*.googlesyndication.com https://*.g.doubleclick.net https://*.adtrafficquality.google https://www.google.com https://www.google-analytics.com; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.safeframe.googlesyndication.com https://*.adtrafficquality.google https://www.google.com/pagead/ https://www.google.com/recaptcha/;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://tpc.googlesyndication.com https://*.adtrafficquality.google https://googleads.g.doubleclick.net https://www.googletagservices.com https://partner.googleadservices.com https://www.google.com/pagead/ https://www.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://pagead2.googlesyndication.com https://*.adtrafficquality.google https://googleads.g.doubleclick.net https://www.google.com/recaptcha/ https://services.arcgis.com https://phl.carto.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com; img-src 'self' data: https://www.googletagmanager.com https://*.googlesyndication.com https://*.g.doubleclick.net https://*.adtrafficquality.google https://www.google.com https://www.google-analytics.com; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.safeframe.googlesyndication.com https://*.adtrafficquality.google https://www.google.com/pagead/ https://www.google.com/recaptcha/;">
 <!-- Light is the default, so the browser chrome starts on the paper ground.
      Kept in sync with the active theme by the toggle below; media-scoped
      variants would be wrong here because the theme follows the stored
@@ -300,6 +300,18 @@
   .share-btn:active{color:var(--accent);border-color:var(--accent)}
   .share-btn svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;fill:none}
   .prophead-actions{display:flex;gap:8px;flex-shrink:0}
+
+  /* Right-to-Know call to action: shown under every search result */
+  .rtk-cta{display:none;margin:22px 0 0;padding:18px 20px;border:1px solid rgb(var(--accent-rgb) / .45);border-left:6px solid var(--accent);border-radius:8px;background:rgb(var(--accent-rgb) / .08);position:relative}
+  .rtk-cta:has(~ #tabs:not([style*="none"])){display:block}
+  @supports not selector(:has(*)){.rtk-cta{display:block}}
+  .rtk-cta .rtk-cta-badge{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600;letter-spacing:.1em;padding:3px 8px;border-radius:3px;background:var(--accent-fill);color:var(--on-accent);margin-bottom:8px}
+  .rtk-cta h3{margin:0 0 6px;font-family:"Archivo",sans-serif;font-weight:800;font-size:18px;letter-spacing:-.01em;color:var(--ink)}
+  .rtk-cta p{margin:0 0 12px;font-size:15px;line-height:1.55;color:var(--ink-dim)}
+  .rtk-cta .rtk-cta-row{display:flex;gap:12px 18px;flex-wrap:wrap;align-items:center}
+  .rtk-cta .rtk-cta-btn{display:inline-flex;align-items:center;min-height:48px;padding:12px 20px;border-radius:4px;background:var(--accent-fill);color:var(--on-accent);font-family:"Archivo",sans-serif;font-weight:700;font-size:14px;letter-spacing:.03em;text-decoration:none;border:none}
+  .rtk-cta .rtk-cta-btn:hover{background:var(--accent-fill-hover);color:var(--on-accent)}
+  .rtk-cta .rtk-cta-gov{display:inline-flex;align-items:center;min-height:44px;padding:0 6px;font-size:14px;font-weight:600}
 
   /* Tabs */
   .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0;padding:0 0 12px}
@@ -733,45 +745,6 @@
     .modal-311-body textarea{font-size:11px;min-height:160px}
     .modal-311-actions button,.modal-311-actions a{font-size:12px;padding:10px 14px}
   }
-  /* RTKL Request Modal */
-  .modal-rtkl-overlay{position:fixed;inset:0;background:var(--overlay);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px}
-  .modal-rtkl-card{background:var(--panel);border:1px solid var(--line);border-radius:6px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow);position:relative}
-  .modal-rtkl-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--line-soft)}
-  .modal-rtkl-header h3{margin:0;font-family:"Archivo",sans-serif;font-weight:800;font-size:16px;color:var(--ink);letter-spacing:-.01em}
-  .modal-rtkl-close{background:transparent;border:1px solid var(--line);color:var(--ink-mute);width:44px;height:44px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;transition:color .15s,border-color .15s;flex-shrink:0}
-  .modal-rtkl-close:hover{color:var(--ink);border-color:var(--accent)}
-  .modal-rtkl-body{padding:16px 20px 20px}
-  .modal-rtkl-body .rtkl-sec{font-family:"Archivo",sans-serif;font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-mute);margin:16px 0 8px}
-  .modal-rtkl-body .rtkl-sec:first-child{margin-top:0}
-  .modal-rtkl-body .rtkl-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-  .modal-rtkl-body .rtkl-f{flex:1 1 140px;min-width:0;display:flex;flex-direction:column;gap:4px}
-  .modal-rtkl-body .rtkl-f.sm{flex:0 1 90px}
-  .modal-rtkl-body .rtkl-f label,.modal-rtkl-body .rtkl-legend{font-family:"Archivo",sans-serif;font-weight:600;font-size:12px;color:var(--ink-mute);letter-spacing:.02em}
-  .modal-rtkl-body input[type=text],.modal-rtkl-body input[type=email],.modal-rtkl-body input[type=tel],.modal-rtkl-body select,.modal-rtkl-body textarea{width:100%;background:var(--panel-2);color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:9px 10px;font-family:"IBM Plex Mono",monospace;font-size:16px;outline:none;box-sizing:border-box;box-shadow:inset 0 1px 3px rgb(var(--hard-rgb) / .16)}
-  .modal-rtkl-body textarea{min-height:200px;font-size:13px;line-height:1.5;resize:vertical}
-  .modal-rtkl-body input:focus,.modal-rtkl-body select:focus,.modal-rtkl-body textarea:focus{border-color:var(--accent)}
-  .modal-rtkl-body .rtkl-opts{display:flex;gap:6px 16px;flex-wrap:wrap;margin-bottom:10px}
-  .modal-rtkl-body .rtkl-opts label{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-family:"IBM Plex Sans",sans-serif;font-size:14px;color:var(--ink);cursor:pointer}
-  .modal-rtkl-body .rtkl-opts input{width:20px;height:20px;margin:0;accent-color:var(--accent)}
-  .modal-rtkl-body .rtkl-affirm{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:4px;background:var(--panel-2);font-family:"IBM Plex Sans",sans-serif;font-size:13px;line-height:1.5;color:var(--ink);cursor:pointer}
-  .modal-rtkl-body .rtkl-affirm input{width:22px;height:22px;margin:1px 0 0;flex-shrink:0;accent-color:var(--accent)}
-  .modal-rtkl-body .rtkl-err{display:none;margin-top:10px;color:var(--bad,#b3261e);font-family:"IBM Plex Mono",monospace;font-size:12px}
-  .modal-rtkl-body .rtkl-clear-link{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-mute);cursor:pointer;text-decoration:underline;white-space:nowrap}
-  .modal-rtkl-body .rtkl-clear-link:hover{color:var(--accent)}
-  .modal-rtkl-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-  .modal-rtkl-actions button,.modal-rtkl-actions a{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;min-height:44px;font-family:"Archivo",sans-serif;font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;border-radius:3px;cursor:pointer;touch-action:manipulation;text-decoration:none;border:none;flex:1 1 0;min-width:0;box-sizing:border-box}
-  .modal-rtkl-copy{background:var(--accent-fill);color:var(--on-accent);transition:background .15s}
-  .modal-rtkl-copy:hover{background:var(--accent-fill-hover)}
-  .modal-rtkl-print{background:rgb(var(--accent-rgb) / .08);border:1px solid rgb(var(--accent-rgb) / .25) !important;color:var(--accent);transition:background .15s}
-  .modal-rtkl-print:hover{background:rgb(var(--accent-rgb) / .15)}
-  .modal-rtkl-note{margin-top:12px;font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-mute);line-height:1.6}
-  @media(max-width:679px){
-    .modal-rtkl-card{max-width:100%;border-radius:8px}
-    .modal-rtkl-header{padding:14px 16px 12px}
-    .modal-rtkl-header h3{font-size:15px}
-    .modal-rtkl-body{padding:12px 16px 16px}
-    .modal-rtkl-actions button,.modal-rtkl-actions a{font-size:12px;padding:10px 14px}
-  }
   /* Print / PDF — brief tab only */
   .print-brief-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--ink-dim);border:1px solid var(--line);padding:0 14px;min-height:44px;font-family:"Archivo",sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:color .15s,border-color .15s;touch-action:manipulation;margin-bottom:18px}
   .print-brief-btn:hover{color:var(--accent);border-color:var(--accent)}
@@ -947,7 +920,6 @@
   .scan-row-owner:focus-visible,
   .zr-zip-link:focus-visible,
   .brand-mark:focus-visible,
-  .rtkl-clear-link:focus-visible,
   .help-link:focus-visible{
     outline:2px solid var(--accent);
     outline-offset:2px;
@@ -958,7 +930,6 @@
   .scan-btn:focus-visible,
   .scanner-toggle button.active:focus-visible,
   .modal-311-copy:focus-visible,
-  .modal-rtkl-copy:focus-visible,
   .zr-dl-btn:focus-visible{
     outline:2px solid var(--accent-edge);
     outline-offset:1px;
@@ -1013,7 +984,7 @@
     <div>
       <div class="brand">
         <div class="brand-mark" role="button" tabindex="0" aria-label="4PHILLY — reset and return to lookup">4<span>PHILLY</span></div>
-        <span style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.06em;padding:2px 7px;border-radius:2px;background:rgb(var(--accent-rgb) / .12);color:var(--accent);border:1px solid rgb(var(--accent-rgb) / .35);text-transform:uppercase;vertical-align:middle;line-height:1.4">v4.5</span>
+        <span style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.06em;padding:2px 7px;border-radius:2px;background:rgb(var(--accent-rgb) / .12);color:var(--accent);border:1px solid rgb(var(--accent-rgb) / .35);text-transform:uppercase;vertical-align:middle;line-height:1.4">v4.6</span>
         <div class="brand-tag"> A Tenants App for Philadelphia Properties - made easy.</div>
       </div>
       <div class="gov-disclaimer" role="note">
@@ -1029,7 +1000,7 @@
     </div>
     <div class="top-meta">
       <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle light or dark theme" title="Toggle light / dark">☾ Dark</button>
-      <div>build <span class="mono">4.5</span></div>
+      <div>build <span class="mono">4.6</span></div>
       <div>pulled <span id="now" class="mono">—</span></div>
     </div>
   </header>
@@ -1290,6 +1261,15 @@
     <div class="score-breakdown" id="score-breakdown"></div>
   </div>
 
+  <aside class="rtk-cta no-print" id="rtk-cta" aria-label="Request this building's records">
+    <span class="rtk-cta-badge">NEW</span>
+    <h3>Need the full file on this building?</h3>
+    <p>Inspectors' notes, photos and letters aren't on the public map. A <b>Right-to-Know request</b> asks the City for them &mdash; it's free to file (copies may cost a small fee), and the City must answer within 5 business days (it can ask for more time). We fill in the official Pennsylvania form for you.</p>
+    <div class="rtk-cta-row">
+      <a class="rtk-cta-btn" id="rtk-cta-link" href="rtk.html">Make a Right-to-Know request &rarr;</a>
+      <a class="rtk-cta-gov" href="https://www.openrecords.pa.gov/documents/RTKL/RTKRequestForm.pdf" target="_blank" rel="noopener noreferrer">Blank official form</a>
+    </div>
+  </aside>
   <div class="tabs-hint" id="tabs-hint" aria-hidden="true">↓ Tap a tab to explore this address: Inspect · Drift · Brief · Records · Limits · Council</div>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Property record views" style="display:none">
     <button class="tab active" data-tab="inspect" role="tab" id="tab-inspect" aria-controls="pane-inspect" aria-selected="true">Inspect</button>
@@ -1408,7 +1388,7 @@
   <div style="border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--panel);text-align:center;margin-top:16px">
     <img src="how-it-works.svg" alt="4PHILLY data flow diagram: an address or OPA number resolves through OPA lookup into two parallel sources, the authoritative Eclipse ArcGIS system and the historical Carto SQL mirror, which are compared by a drift comparator to produce a unified record with drift flags, while OPA data also resolves the council district to surface the councilmember and any L&amp;I Committee flag" style="max-width:100%;width:640px;display:block;margin:0 auto" loading="lazy">
   </div>
-  <div class="footer-disc">4PHILLY v4.5 — open-source civic tool. Verify any claim before relying on it. No warranty.</div>
+  <div class="footer-disc">4PHILLY v4.6 — open-source civic tool. Verify any claim before relying on it. No warranty.</div>
 </footer>
 
 </div><!-- /wrap -->
@@ -1431,75 +1411,6 @@
   </div>
 </div>
 
-<!-- RTKL Request Modal: fills the official PA OOR Standard Right-to-Know Law Request Form -->
-<div id="modal-rtkl" class="modal-rtkl-overlay no-print" style="display:none" role="dialog" aria-modal="true" aria-label="Right-to-Know Law request">
-  <div class="modal-rtkl-card">
-    <div class="modal-rtkl-header">
-      <h3>Right-to-Know Request (official PA form)</h3>
-      <button class="modal-rtkl-close" id="modal-rtkl-close" aria-label="Close">&times;</button>
-    </div>
-    <form class="modal-rtkl-body" id="rtk-form" autocomplete="on" novalidate>
-      <div class="rtkl-sec">Submitted to</div>
-      <div class="rtkl-row">
-        <div class="rtkl-f" style="flex-basis:260px"><label for="rtk-agency">Agency (Attn: AORO)</label><input type="text" id="rtk-agency" value="City of Philadelphia, Department of Licenses and Inspections"></div>
-        <div class="rtkl-f"><label for="rtk-via">Submitting via</label><select id="rtk-via"><option value="email">Email</option><option value="mail">U.S. Mail</option><option value="fax">Fax</option><option value="person">In person</option></select></div>
-      </div>
-      <div class="rtkl-sec">Person making request</div>
-      <div class="rtkl-row">
-        <div class="rtkl-f"><label for="rtk-name">Full name *</label><input type="text" id="rtk-name" autocomplete="name" placeholder="Your full legal name"></div>
-        <div class="rtkl-f"><label for="rtk-company">Company (optional)</label><input type="text" id="rtk-company" autocomplete="organization"></div>
-      </div>
-      <div class="rtkl-row">
-        <div class="rtkl-f"><label for="rtk-email">Email</label><input type="email" id="rtk-email" autocomplete="email" inputmode="email"></div>
-        <div class="rtkl-f"><label for="rtk-phone">Telephone</label><input type="tel" id="rtk-phone" autocomplete="tel" inputmode="tel"></div>
-      </div>
-      <div class="rtkl-row"><div class="rtkl-f"><label for="rtk-addr">Mailing address</label><input type="text" id="rtk-addr" autocomplete="street-address"></div></div>
-      <div class="rtkl-row">
-        <div class="rtkl-f"><label for="rtk-city">City</label><input type="text" id="rtk-city" value="Philadelphia" autocomplete="address-level2"></div>
-        <div class="rtkl-f sm"><label for="rtk-state">State</label><input type="text" id="rtk-state" value="PA" maxlength="2" autocomplete="address-level1"></div>
-        <div class="rtkl-f sm"><label for="rtk-zip">Zip</label><input type="text" id="rtk-zip" maxlength="10" inputmode="numeric" autocomplete="postal-code"></div>
-      </div>
-      <div class="rtkl-row">
-        <div class="rtkl-f"><label for="rtk-resp">Send the response via</label><select id="rtk-resp"><option value="email">Email</option><option value="mail">U.S. Mail</option></select></div>
-        <div class="rtkl-f"><label for="rtk-contact">If the agency has questions, contact me by</label><select id="rtk-contact"><option value="email">Email</option><option value="phone">Telephone</option><option value="mail">U.S. Mail</option></select></div>
-      </div>
-      <label class="rtkl-affirm"><input type="checkbox" id="rtk-affirm"><span>I affirm that my full name and contact information is true and correct, and that I am a legal resident of the United States. (The form says failing to check this may get the request denied and any appeal dismissed.)</span></label>
-
-      <div class="rtkl-sec">Records requested</div>
-      <textarea id="rtk-records" aria-label="Records requested"></textarea>
-
-      <div class="rtkl-sec">Copies and fees</div>
-      <div class="rtkl-legend">Do you want copies?</div>
-      <div class="rtkl-opts" role="radiogroup" aria-label="Copies">
-        <label><input type="radio" name="rtk-copies" value="electronic" checked> Yes, electronic</label>
-        <label><input type="radio" name="rtk-copies" value="printed"> Yes, printed</label>
-        <label><input type="radio" name="rtk-copies" value="inspect"> No, in-person inspection</label>
-      </div>
-      <div class="rtkl-legend">Notify me before processing if fees will be more than</div>
-      <div class="rtkl-opts" role="radiogroup" aria-label="Fee limit">
-        <label><input type="radio" name="rtk-fee" value="100" checked> $100</label>
-        <label><input type="radio" name="rtk-fee" value="custom"> Other: $<input type="text" id="rtk-fee-amt" inputmode="decimal" style="width:90px;min-height:36px" aria-label="Fee limit amount"></label>
-      </div>
-      <div class="rtkl-legend">Certified copies?</div>
-      <div class="rtkl-opts" role="radiogroup" aria-label="Certified copies">
-        <label><input type="radio" name="rtk-cert" value="no" checked> No</label>
-        <label><input type="radio" name="rtk-cert" value="yes"> Yes (may cost extra)</label>
-      </div>
-
-      <div class="rtkl-err" id="rtk-err" role="alert"></div>
-      <div class="modal-rtkl-actions">
-        <button type="button" class="modal-rtkl-copy" id="rtk-download">Download filled PDF</button>
-        <button type="button" class="modal-rtkl-print" id="rtk-copy-records">Copy records text</button>
-      </div>
-      <div class="modal-rtkl-actions" style="margin-top:8px">
-        <a class="modal-rtkl-print" href="forms/RTKRequestForm.pdf" target="_blank" rel="noopener">Blank official form</a>
-        <button type="button" class="rtkl-clear-link" id="rtkl-clear-name" style="background:none;border:none;align-self:center;text-align:center">Clear my data</button>
-      </div>
-      <div class="modal-rtkl-note">This is the Pennsylvania Office of Open Records Standard Right-to-Know Law Request Form, filled in on your device &mdash; nothing is uploaded. Only your name is remembered here, and "Clear my data" removes it. Keep a copy of both pages. Send it to the L&amp;I Open Records Officer &mdash; confirm the current address and email at <a href="https://www.phila.gov/open-records-policy/" target="_blank" rel="noopener noreferrer">phila.gov/open-records-policy</a>. The agency has five business days to respond; if denied or deemed denied you have 15 business days to appeal to the Office of Open Records.</div>
-    </form>
-  </div>
-</div>
-
 <!-- bottom-nav removed; tabs are always at top -->
 
 <!-- DISCLAIMER FAB + MODAL (government non-affiliation notice) -->
@@ -1514,6 +1425,11 @@
     <button class="disc-close" id="disc-close" type="button" aria-label="Close">&times;</button>
     <h2>Not a Government App</h2>
     <p>4PHILLY is an independent, non-governmental tool. It is not affiliated with, endorsed by, or operated by the City of Philadelphia or any government agency. All information comes from Philadelphia's public open-data records. Always verify directly with the City before relying on anything shown here.</p>
+    <div class="disc-src-title">Get the City's records</div>
+    <ul class="disc-src">
+      <li><a href="rtk.html" class="no-ext-cue"><b>Make a Right-to-Know request</b> &mdash; fills the official form <span class="arw">&rarr;</span></a></li>
+      <li><a href="https://www.openrecords.pa.gov/documents/RTKL/RTKRequestForm.pdf" target="_blank" rel="noopener noreferrer" class="no-ext-cue">Blank official form (PA Office of Open Records) <span class="arw">&rarr;</span></a></li>
+    </ul>
     <div class="disc-src-title">Official City sources</div>
     <ul class="disc-src">
       <li><a href="https://atlas.phila.gov/" target="_blank" rel="noopener noreferrer" class="no-ext-cue">Atlas — property &amp; permits <span class="arw">&rarr;</span></a></li>
@@ -2324,6 +2240,16 @@ function renderBriefLicenseList(licenses){
 }
 
 let lastLookupCoords=null;
+// Link to the Right-to-Know page, pre-filled for a property. Data rides in the URL
+// fragment (#...), which browsers never send to any server.
+function rtkUrl(addr,opa,cases){
+  const q=new URLSearchParams();
+  if(addr) q.set("addr",String(addr).slice(0,120));
+  if(/^\d{6,12}$/.test(String(opa||""))) q.set("opa",String(opa));
+  if(cases&&cases.length) q.set("cases",cases.slice(0,60).join(","));
+  const s=q.toString();
+  return "rtk.html"+(s?"#"+s:"");
+}
 // Show a piece of record chrome (header/tabs/score card) — unless the user has
 // switched to a scanner mode while the lookup was in flight. Then stash the
 // visibility in dataset.wasVisible for switchMode to restore when they return
@@ -2340,6 +2266,7 @@ function renderProphead(opa, opaRow){
   switchTab(currentTab);
   $("#ph-addr").textContent=opaRow?.location||`OPA ${opa}`;
   $("#ph-opa").textContent=opa;
+  $("#rtk-cta-link").href=rtkUrl($("#ph-addr").textContent,opa,[]);
   const ownerName=opaRow?.owner_1||"—";
   const ownerLine=$("#ph-owner-line");
   if(ownerLine){
@@ -2891,13 +2818,14 @@ function renderBrief({opaRow,lic,licenseSummary,openViol,allViol,t311}){
       <h4>If you live here and something is wrong</h4>
       <ul>
         <li>File a complaint at <a href="https://www.phila.gov/departments/philly311/" target="_blank" rel="noopener">phila.gov/311</a> — that creates a public record.</li>
-        <li>Request the property's full history under Pennsylvania RTKL: <a href="https://www.phila.gov/departments/department-of-licenses-and-inspections/" target="_blank" rel="noopener">L&amp;I Open Records Officer</a>.</li>
+        <li>Request the property's full history under Pennsylvania's Right-to-Know Law: <a href="rtk.html" id="brief-rtk-inline">make a Right-to-Know request</a>.</li>
         <li>If the landlord is unlicensed during a rent collection period, see <i>Frempong v. Richardson</i>, 209 A.3d 1001 (Pa. Super. 2019) — consult a housing attorney for guidance. Not Legal Advice.</li>
       </ul>
     </div>
     <div class="cm-actions" style="margin-top:20px">
       <a href="#" id="brief-file311-btn" style="font-weight:700;font-size:13px">File 311 Complaint</a>
-      <a href="#" id="brief-rtkl-btn" style="font-weight:700;font-size:13px;margin-left:16px">Generate RTKL Request</a>
+      <a href="rtk.html" id="brief-rtkl-btn" style="display:inline-block;padding:12px 0;font-weight:700;font-size:13px;margin-left:16px">Make a Right-to-Know request</a>
+      <a href="https://www.openrecords.pa.gov/documents/RTKL/RTKRequestForm.pdf" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 0;font-weight:700;font-size:13px;margin-left:16px">Blank official form</a>
     </div>
   `;
   const issueType=detectIssueType(opaRow,safeOpenViol,lic);
@@ -2930,17 +2858,17 @@ function renderBrief({opaRow,lic,licenseSummary,openViol,allViol,t311}){
     });
   }
 
-  // Wire up RTKL request modal button
-  const rtklBtn=$("#brief-rtkl-btn");
-  if(rtklBtn){
-    rtklBtn.addEventListener("click",e=>{
-      e.preventDefault();
-      const allCases=[...safeOpenViol,...safeAllViol];
-      const caseNums=[...new Set(allCases.map(v=>v.casenumber).filter(Boolean))];
-      const opaNum=opaRow?.parcel_number||"N/A";
-      openRTKLModal(addr,opaNum,caseNums);
-    });
-  }
+  wireRtkLinks(addr,opaRow,safeOpenViol,safeAllViol);
+
+}
+
+// Point both Right-to-Know links (CTA + Brief tab) at the request page, pre-filled for this property
+function wireRtkLinks(addr,opaRow,safeOpenViol,safeAllViol){
+  const caseNums=[...new Set([...safeOpenViol,...safeAllViol].map(v=>v.casenumber).filter(Boolean))];
+  const href=rtkUrl(addr,opaRow?.parcel_number,caseNums);
+  const brief=$("#brief-rtkl-btn"); if(brief) brief.href=href;
+  const inline=$("#brief-rtk-inline"); if(inline) inline.href=href;
+  const cta=$("#rtk-cta-link"); if(cta) cta.href=href;
 }
 
 // ---- 311 Complaint Modal ----
@@ -2978,130 +2906,6 @@ function close311Modal(){
     if(e.key==="Escape"){
       const modal=document.getElementById("modal-311");
       if(modal&&modal.style.display!=="none") close311Modal();
-    }
-  });
-})();
-
-// ---- RTKL Request Modal (fills the official OOR PDF form) ----
-function buildRTKRecords(addr,opa,caseNums){
-  const caseList=caseNums.length>0?caseNums.join(", "):"(none listed in the public data)";
-  return "Pursuant to the Pennsylvania Right-to-Know Law, 65 P.S. § 67.101 et seq., I request copies of the following records for the property at "+addr+", Philadelphia, PA (OPA account "+opa+"):\n\n"+
-    "1. All inspector notes, photographs, and correspondence for L&I case numbers: "+caseList+".\n"+
-    "2. All inspection reports and findings for this property.\n"+
-    "3. All correspondence between the Department of Licenses and Inspections and the property owner or management company.\n"+
-    "4. All complaints filed with the Department regarding this property.\n\n"+
-    "Time frame: all dates on file through the date of this request.";
-}
-
-function openRTKLModal(addr,opa,caseNums){
-  const modal=document.getElementById("modal-rtkl");
-  if(!modal) return;
-  document.getElementById("rtk-name").value=localStorage.getItem("4p_tenant_name")||"";
-  document.getElementById("rtk-records").value=buildRTKRecords(addr,opa,caseNums);
-  document.getElementById("rtk-affirm").checked=false; // must be affirmed fresh for every request
-  const err=document.getElementById("rtk-err"); err.style.display="none";
-  modal.style.display="flex";
-  document.body.style.overflow="hidden";
-  modal._rtkOpa=opa;
-  document.getElementById("rtk-name").focus();
-}
-
-function closeRTKLModal(){
-  const modal=document.getElementById("modal-rtkl");
-  if(!modal) return;
-  modal.style.display="none";
-  document.body.style.overflow="";
-}
-
-function loadScriptOnce(src){
-  return new Promise((res,rej)=>{
-    if(document.querySelector('script[data-lazy="'+src+'"]')) return res();
-    const sc=document.createElement("script");
-    sc.src=src; sc.dataset.lazy=src; sc.onload=res; sc.onerror=()=>rej(new Error("Could not load "+src));
-    document.head.appendChild(sc);
-  });
-}
-
-function readRTKForm(){
-  const v=id=>document.getElementById(id).value.trim();
-  const r=n=>(document.querySelector('input[name="'+n+'"]:checked')||{}).value;
-  const d=new Date();
-  return {
-    agency:v("rtk-agency"),
-    date:String(d.getMonth()+1).padStart(2,"0")+"/"+String(d.getDate()).padStart(2,"0")+"/"+d.getFullYear(),
-    submittedVia:v("rtk-via"),name:v("rtk-name"),company:v("rtk-company"),
-    respondVia:v("rtk-resp"),email:v("rtk-email"),address:v("rtk-addr"),
-    city:v("rtk-city"),state:v("rtk-state").toUpperCase(),zip:v("rtk-zip"),phone:v("rtk-phone"),
-    contactVia:v("rtk-contact"),affirm:document.getElementById("rtk-affirm").checked,
-    records:document.getElementById("rtk-records").value,
-    copies:r("rtk-copies"),feeAck:true,feeCap:r("rtk-fee"),
-    feeAmount:v("rtk-fee-amt").replace(/[^0-9.,]/g,""),certified:r("rtk-cert")
-  };
-}
-
-function rtkProblem(d){
-  if(!d.name) return "Enter your full name.";
-  if(!d.affirm) return "Check the box confirming your name and contact info are true and that you are a U.S. legal resident — the form requires it.";
-  if(d.respondVia==="email"&&!d.email) return "You chose a response by email — enter your email address.";
-  if(d.respondVia==="mail"&&!(d.address&&d.city&&d.state&&d.zip)) return "You chose a response by mail — enter your full mailing address.";
-  if(d.contactVia==="phone"&&!d.phone) return "You chose to be contacted by telephone — enter a phone number.";
-  if(d.feeCap==="custom"&&!d.feeAmount) return "Enter the dollar amount for your fee limit, or pick $100.";
-  if(!d.records.trim()) return "Describe the records you are requesting.";
-  return "";
-}
-
-async function downloadRTKPdf(){
-  const err=document.getElementById("rtk-err");
-  const d=readRTKForm();
-  const prob=rtkProblem(d);
-  if(prob){ err.textContent=prob; err.style.display="block"; return; }
-  err.style.display="none";
-  const btn=document.getElementById("rtk-download");
-  const label=btn.textContent; btn.disabled=true; btn.textContent="Filling form…";
-  try{
-    await loadScriptOnce("lib/pdf-lib.min.js");
-    await loadScriptOnce("lib/rtk-fill.js");
-    const resp=await fetch("forms/RTKRequestForm.pdf");
-    if(!resp.ok) throw new Error("official form unavailable ("+resp.status+")");
-    const out=await window.RtkForm.fill(window.PDFLib,await resp.arrayBuffer(),d);
-    if(out.overflow){ err.textContent="Your records text is too long for the form's two boxes. Shorten it, or attach extra pages as the form allows."; err.style.display="block"; return; }
-    const url=URL.createObjectURL(new Blob([out.bytes],{type:"application/pdf"}));
-    const a=document.createElement("a");
-    a.href=url; a.download="RTK-Request-"+(document.getElementById("modal-rtkl")._rtkOpa||"property")+".pdf";
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),10000);
-    if(d.name) localStorage.setItem("4p_tenant_name",d.name);
-    showCopyToast("Official RTK form downloaded");
-  }catch(e){
-    err.textContent=e.userMessage||("Couldn't build the PDF: "+e.message+". You can still use \"Blank official form\" and copy the records text.");
-    err.style.display="block";
-  }finally{ btn.disabled=false; btn.textContent=label; }
-}
-
-(function initRTKLModal(){
-  document.addEventListener("click",function(e){
-    if(e.target.id==="modal-rtkl-close"||e.target.id==="modal-rtkl") closeRTKLModal();
-    if(e.target.id==="rtk-download") downloadRTKPdf();
-    if(e.target.id==="rtkl-clear-name"){
-      localStorage.removeItem("4p_tenant_name");
-      document.getElementById("rtk-name").value="";
-      showCopyToast("Saved name cleared");
-    }
-    if(e.target.id==="rtk-copy-records"){
-      const ta=document.getElementById("rtk-records");
-      navigator.clipboard.writeText(ta.value).then(function(){
-        showCopyToast("Records text copied");
-      }).catch(function(){
-        ta.select();
-        document.execCommand("copy");
-        showCopyToast("Records text copied");
-      });
-    }
-  });
-  document.addEventListener("keydown",function(e){
-    if(e.key==="Escape"){
-      const modal=document.getElementById("modal-rtkl");
-      if(modal&&modal.style.display!=="none") closeRTKLModal();
     }
   });
 })();
@@ -3221,13 +3025,13 @@ function renderLimitsTab(){
       severity:"policy",
       title:"Inspector identity is not in public data",
       why:"No inspector name, badge number, or organizational unit appears in any public Eclipse or Carto layer. This is a policy decision, not a technical oversight. The data exists inside L&I's system; it simply isn't published. Without inspector IDs, it's impossible to detect geographic or temporal patterns in enforcement.",
-      future:"Future versions: a RTKL request workflow and a call for the city to publish a stable non-PII inspector identifier to enable pattern detection without exposing personal information."
+      future:"A Right-to-Know request page now exists (rtk.html). Future versions: a call for the city to publish a stable non-PII inspector identifier to enable pattern detection without exposing personal information."
     },
     {
       severity:"policy",
       title:"Inspector notes and photos are FOIA-only",
       why:"Case notes, inspection narratives, and photographs taken during a site visit are internal L&I records not included in any public API response. They can be obtained via a Right-to-Know Law request under 65 P.S. § 67.101 et seq., but that process takes weeks and is case-by-case.",
-      future:"Future versions: a guided RTKL request generator pre-filled with the case numbers visible on this screen."
+      future:"Use the Right-to-Know request page, which pre-fills the case numbers shown on this screen."
     },
     {
       severity:"policy",
@@ -5141,8 +4945,15 @@ if('serviceWorker' in navigator){
   var overlay = document.getElementById('disc-overlay');
   var closeBtn = document.getElementById('disc-close');
   if(!fab || !overlay) return;
-  function open(){ overlay.classList.add('open'); fab.classList.remove('pulse'); }
-  function close(){ overlay.classList.remove('open'); }
+  function open(){
+    overlay.classList.add('open'); fab.classList.remove('pulse');
+    // When a property is on screen, carry it into the Right-to-Know link.
+    var cta=document.getElementById('rtk-cta-link'), tabs=document.getElementById('tabs'), link=overlay.querySelector('a[href^="rtk.html"]');
+    if(link) link.setAttribute('href', (cta && tabs && tabs.style.display!=='none') ? cta.getAttribute('href') : 'rtk.html');
+    // focus after the overlay has become visible (a hidden element can't take focus)
+    if(closeBtn) setTimeout(function(){ closeBtn.focus(); }, 80);
+  }
+  function close(){ if(!overlay.classList.contains('open')) return; overlay.classList.remove('open'); fab.focus(); }
   fab.addEventListener('click', open);
   if(closeBtn) closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', function(e){ if(e.target === overlay) close(); });

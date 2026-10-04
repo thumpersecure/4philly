@@ -3,7 +3,7 @@
 
   <url>
        <loc>https://4philly.net/</loc>
-       <lastmod>2026-08-01</lastmod>
+       <lastmod>2026-10-04</lastmod>
        <changefreq>daily</changefreq>
        <priority>1.0000</priority>
   </url>
@@ -15,12 +15,17 @@
 
   <url>
        <loc>https://4philly.net/blog/pre-lease-check.html</loc>
-       <lastmod>2026-08-01</lastmod>
+       <lastmod>2026-10-04</lastmod>
   </url>
 
   <url>
        <loc>https://4philly.net/blog/records-contradiction.html</loc>
        <lastmod>2026-08-23</lastmod>
+  </url>
+
+  <url>
+       <loc>https://4philly.net/rtk.html</loc>
+       <lastmod>2026-10-04</lastmod>
   </url>
 
   <url>
@@ -35,12 +40,12 @@
 
   <url>
        <loc>https://4philly.net/guides/li-violation-search.html</loc>
-       <lastmod>2026-08-01</lastmod>
+       <lastmod>2026-10-04</lastmod>
   </url>
 
   <url>
        <loc>https://4philly.net/guides/unlicensed-landlord-rights.html</loc>
-       <lastmod>2026-08-01</lastmod>
+       <lastmod>2026-10-04</lastmod>
   </url>
 
   <url>

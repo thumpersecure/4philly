@@ -1,5 +1,5 @@
-const CACHE = '4philly-v33';
-const STATIC = ['./', './index.html', './404.html', './manifest.json', './icon.svg'];
+const CACHE = '4philly-v35';
+const STATIC = ['./', './index.html', './404.html', './manifest.json', './icon.svg', './rtk.html', './lib/theme.js', './lib/rtk-page.js'];
 // Both Google Fonts origins: the CSS from fonts.googleapis.com AND the font
 // binaries from fonts.gstatic.com. Caching only the binaries left the fonts
 // dead offline because the stylesheet that references them was never cached.
@@ -54,15 +54,17 @@ self.addEventListener('fetch', e => {
   // Only cache OK responses — a transient 404/500 must never overwrite a
   // good cached copy of index.html.
   if (url.origin === self.location.origin) {
+    // Cache under the URL WITHOUT its #fragment: on the Right-to-Know page the fragment carries the property address.
+    const key = new URL(request.url); key.hash = '';
     e.respondWith(
       fetch(request).then(r => {
         if (r.ok) {
           const clone = r.clone();
-          caches.open(CACHE).then(c => c.put(request, clone));
+          caches.open(CACHE).then(c => c.put(key.href, clone));
         }
         return r;
       }).catch(async () => {
-        const cached = await caches.match(request);
+        const cached = await caches.match(key.href);
         if (cached) return cached;
         if (request.mode === 'navigate') return caches.match('./index.html');
         return Response.error();
