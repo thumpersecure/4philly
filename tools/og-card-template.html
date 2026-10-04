@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!--
+  Parameterized source for the per-page 1200x630 social cards (v2 — gradient
+  polish pass, 2026-10-04). Same render recipe as og-card.html:
+
+    chrome --headless --disable-gpu --no-sandbox --hide-scrollbars \
+           --force-device-scale-factor=1 --virtual-time-budget=4000 \
+           --window-size=1200,630 --screenshot=OUT.png \
+           file://$PWD/tools/og-card-template.html?kicker=...&head=...&lede=...&tags=...&hue=...
+
+  Query params (all URI-encoded):
+    kicker  — small label left of the mark (e.g. "GUIDE", "INVESTIGATION")
+    head    — headline, <em>...</em> wraps the accent-colored span
+    lede    — subhead paragraph, <b>...</b> wraps the bold span
+    tags    — middle-dot separated tag list for the footer row
+    hue     — 0-360, rotates the gradient mesh so every card feels related but distinct
+
+  Same tokens as the site's light theme: white ground, near-black ink, one
+  blue — the gradient mesh sits behind at low opacity so text contrast holds.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff; --line:#d8dde4;
+    --ink:#14171a; --ink-dim:#474e57; --ink-mute:#5d6570;
+    --accent:#1550e0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1200px;height:630px}
+  body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;position:relative;overflow:hidden}
+
+  /* Gradient mesh — three soft radial blooms rotated per-card by --hue so
+     rtk/blog/home read as a family without being identical. Kept pale and
+     mostly top/right so it never sits under the headline text block. */
+  .mesh{position:absolute;inset:0;z-index:0}
+  .mesh i{position:absolute;display:block;border-radius:50%;filter:blur(60px);opacity:.55}
+  .mesh .m1{width:620px;height:620px;top:-220px;right:-160px;
+    background:conic-gradient(from calc(var(--hue) * 1deg), var(--accent), #6fa8ff, var(--accent));}
+  .mesh .m2{width:420px;height:420px;bottom:-180px;left:-120px;
+    background:radial-gradient(circle, color-mix(in srgb, var(--accent) 35%, transparent), transparent 70%);}
+  .mesh .m3{width:260px;height:260px;top:40%;right:12%;
+    background:radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 75%);opacity:.4}
+  .grain{position:absolute;inset:0;z-index:1;opacity:.05;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  /* Soft white veil so the mesh reads as atmosphere, not a background photo —
+     keeps body-text contrast at the same ratio as the plain-white original. */
+  .veil{position:absolute;inset:0;z-index:2;background:linear-gradient(115deg, rgba(255,255,255,.97) 0%, rgba(255,255,255,.90) 38%, rgba(255,255,255,.80) 100%)}
+
+  .card{position:relative;z-index:3;width:1200px;height:630px;padding:62px 72px 54px;display:flex;flex-direction:column;justify-content:space-between}
+
+  .mark{font-family:"Archivo",sans-serif;font-weight:800;font-size:34px;letter-spacing:-.02em;color:var(--ink);line-height:1;display:flex;align-items:center;gap:14px}
+  .mark b{color:var(--accent)}
+  .kicker{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);border-left:2px solid var(--line);padding-left:14px}
+
+  .head{
+    font-family:"Archivo",sans-serif;font-weight:800;font-size:58px;line-height:1.1;
+    letter-spacing:-.022em;color:var(--ink);max-width:1010px;
+  }
+  .head em{font-style:normal;color:var(--accent)}
+
+  .lede{
+    font-size:21px;line-height:1.5;color:var(--ink-dim);max-width:900px;margin-top:24px;
+  }
+  .lede b{color:var(--ink);font-weight:600}
+
+  .row-bot{display:flex;align-items:center;justify-content:space-between;
+    font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:16px;
+    border-top:1px solid var(--line);padding-top:22px}
+  .tags{color:var(--ink-dim);letter-spacing:.07em}
+  .tags i{font-style:normal;color:var(--ink-mute);padding:0 9px}
+  .site{font-weight:600;letter-spacing:.02em;color:var(--ink-mute)}
+  .site b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="mesh"><i class="m1"></i><i class="m2"></i><i class="m3"></i></div>
+<div class="grain"></div>
+<div class="veil"></div>
+
+<div class="card">
+
+  <div class="mark">4<b>PHILLY</b><span class="kicker" id="kicker"></span></div>
+
+  <div>
+    <div class="head" id="head"></div>
+    <div class="lede" id="lede"></div>
+  </div>
+
+  <div class="row-bot">
+    <div class="tags" id="tags"></div>
+    <div class="site"><b>4philly</b>.net</div>
+  </div>
+
+</div>
+
+<script>
+  // Query-param → DOM. Values carry trusted inline HTML (em/b spans) same as
+  // the original static og-card.html, so decode but don't escape further.
+  var p = new URLSearchParams(location.search);
+  document.getElementById("kicker").innerHTML = p.get("kicker") || "";
+  document.getElementById("head").innerHTML = p.get("head") || "";
+  document.getElementById("lede").innerHTML = p.get("lede") || "";
+  var tags = (p.get("tags") || "").split("|").filter(Boolean);
+  document.getElementById("tags").innerHTML = tags.map(function(t){return t}).join('<i>&middot;</i>');
+  document.documentElement.style.setProperty("--hue", p.get("hue") || "0");
+</script>
+
+</body>
+</html>
