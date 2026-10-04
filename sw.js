@@ -1,4 +1,4 @@
-const CACHE = '4philly-v32';
+const CACHE = '4philly-v33';
 const STATIC = ['./', './index.html', './404.html', './manifest.json', './icon.svg'];
 // Both Google Fonts origins: the CSS from fonts.googleapis.com AND the font
 // binaries from fonts.gstatic.com. Caching only the binaries left the fonts

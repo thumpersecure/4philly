@@ -1013,7 +1013,7 @@
     <div>
       <div class="brand">
         <div class="brand-mark" role="button" tabindex="0" aria-label="4PHILLY — reset and return to lookup">4<span>PHILLY</span></div>
-        <span style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.06em;padding:2px 7px;border-radius:2px;background:rgb(var(--accent-rgb) / .12);color:var(--accent);border:1px solid rgb(var(--accent-rgb) / .35);text-transform:uppercase;vertical-align:middle;line-height:1.4">v4.4</span>
+        <span style="display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.06em;padding:2px 7px;border-radius:2px;background:rgb(var(--accent-rgb) / .12);color:var(--accent);border:1px solid rgb(var(--accent-rgb) / .35);text-transform:uppercase;vertical-align:middle;line-height:1.4">v4.5</span>
         <div class="brand-tag"> A Tenants App for Philadelphia Properties - made easy.</div>
       </div>
       <div class="gov-disclaimer" role="note">
@@ -1029,7 +1029,7 @@
     </div>
     <div class="top-meta">
       <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle light or dark theme" title="Toggle light / dark">☾ Dark</button>
-      <div>build <span class="mono">4.4</span></div>
+      <div>build <span class="mono">4.5</span></div>
       <div>pulled <span id="now" class="mono">—</span></div>
     </div>
   </header>
@@ -1408,7 +1408,7 @@
   <div style="border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--panel);text-align:center;margin-top:16px">
     <img src="how-it-works.svg" alt="4PHILLY data flow diagram: an address or OPA number resolves through OPA lookup into two parallel sources, the authoritative Eclipse ArcGIS system and the historical Carto SQL mirror, which are compared by a drift comparator to produce a unified record with drift flags, while OPA data also resolves the council district to surface the councilmember and any L&amp;I Committee flag" style="max-width:100%;width:640px;display:block;margin:0 auto" loading="lazy">
   </div>
-  <div class="footer-disc">4PHILLY v4.4 — open-source civic tool. Verify any claim before relying on it. No warranty.</div>
+  <div class="footer-disc">4PHILLY v4.5 — open-source civic tool. Verify any claim before relying on it. No warranty.</div>
 </footer>
 
 </div><!-- /wrap -->
@@ -1664,14 +1664,47 @@ function setNow(){
 setNow();
 
 // ---- API ----
+// The City's servers are sometimes very slow (20-30s+) or return an error object
+// with no message. One hung request used to freeze the whole lookup, so every
+// lookup request now times out and retries. `inspect(json)` may return
+// {text, transient} for an error payload inside a 200 response.
+async function fetchJsonRetry(url, label, inspect, {timeoutMs=25000, retries=2}={}){
+  let lastProblem="";
+  for(let attempt=0; attempt<=retries; attempt++){
+    const ac=new AbortController();
+    const timer=setTimeout(()=>ac.abort(),timeoutMs);
+    try{
+      const r=await fetch(url,{signal:ac.signal});
+      if(r.status>=500||r.status===429){ lastProblem=`HTTP ${r.status}`; }
+      else if(!r.ok){ throw new Error(`${label} HTTP ${r.status}`); }
+      else {
+        let j=null;
+        try{ j=await r.json(); }catch(e){ lastProblem="invalid response"; }
+        if(j){
+          const bad=inspect?inspect(j):null;
+          if(!bad) return j;
+          if(!bad.transient) throw new Error(`${label}: ${bad.text}`);
+          lastProblem=bad.text;
+        }
+      }
+    }catch(e){
+      if(e.name==="AbortError") lastProblem=`no response after ${timeoutMs/1000}s`;
+      else if(e instanceof TypeError) lastProblem=`network error (${e.message})`;
+      else throw e;
+    }finally{ clearTimeout(timer); }
+    if(attempt<retries) await new Promise(res=>setTimeout(res,1000*(attempt+1)));
+  }
+  throw new Error(`${label}: the City's data server is slow or not responding (${lastProblem}). Wait a minute and try again.`);
+}
 async function eclipseFetchPage(layer, url){
-  let r;
-  try{ r=await fetch(url); }catch(e){ throw new Error(`Eclipse ${layer}: network error (${e.message})`); }
-  if(!r.ok) throw new Error(`Eclipse ${layer} HTTP ${r.status}`);
-  let j;
-  try{ j=await r.json(); }catch(e){ throw new Error(`Eclipse ${layer}: invalid JSON response`); }
-  if(j.error) throw new Error(`Eclipse ${layer}: ${j.error?.message||j.error?.code||'unknown error'}`);
-  return j;
+  return fetchJsonRetry(url,`Eclipse ${layer}`,j=>{
+    if(!j.error) return null;
+    const code=j.error.code, msg=j.error.message;
+    const detail=Array.isArray(j.error.details)&&j.error.details.length?` (${j.error.details.join("; ")})`:"";
+    // No message, or a 5xx-style code: the server is struggling, not rejecting the query.
+    if(!msg||code>=500) return {transient:true,text:(msg||`error ${code||"with no details"}`)+detail};
+    return {transient:false,text:msg+detail};
+  });
 }
 // ArcGIS feature services cap each response at maxRecordCount (often 1000-2000)
 // and signal more rows with exceededTransferLimit. Requesting resultRecordCount=
@@ -1704,12 +1737,7 @@ async function eclipseQuery(layer, where, fields="*", extra=""){
 }
 async function cartoQuery(sql){
   const url=`${CARTO}?q=${encodeURIComponent(sql)}&format=json`;
-  let r;
-  try{ r=await fetch(url); }catch(e){ throw new Error(`Carto: network error (${e.message})`); }
-  if(!r.ok) throw new Error(`Carto HTTP ${r.status}`);
-  let j;
-  try{ j=await r.json(); }catch(e){ throw new Error(`Carto: invalid JSON response`); }
-  if(j.error) throw new Error(`Carto: ${Array.isArray(j.error)?j.error[0]:String(j.error)}`);
+  const j=await fetchJsonRetry(url,"Carto",j=>j.error?{transient:false,text:Array.isArray(j.error)?j.error[0]:String(j.error)}:null);
   return j.rows||[];
 }
 
