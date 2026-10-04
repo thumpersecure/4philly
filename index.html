@@ -2152,6 +2152,23 @@ function analyzeLicenseRow(row){
   return {isActive,isExpired,statusSignalsInactive,displayStatus};
 }
 
+// Mirrors mergeCartoOnlyLicenses in lib/matching.mjs. Eclipse can omit licenses
+// the Carto mirror has (e.g. Rental 602204 at OPA 881519440); add those rows,
+// tagged _cartoOnly, so they are not reported as "none on file". Eclipse rows
+// win wherever both sources have the license number.
+function mergeCartoOnlyLicenses(eRows,cRows){
+  const e=(Array.isArray(eRows)?eRows:[]).filter(Boolean);
+  const seen=new Set(e.map(r=>String(r.licensenum||"").trim().toUpperCase()).filter(Boolean));
+  const extra=[];
+  for(const r of (Array.isArray(cRows)?cRows:[])){
+    const num=String(r?.licensenum||"").trim().toUpperCase();
+    if(!num||seen.has(num)) continue;
+    seen.add(num);
+    extra.push({...r,_cartoOnly:true});
+  }
+  return e.concat(extra);
+}
+
 function summarizeLicenses(rows){
   const licenses=(Array.isArray(rows)?rows:[]).filter(Boolean);
   const analyzed=licenses.map((row,idx)=>({
@@ -2371,12 +2388,14 @@ function renderLicense(licE){
     return;
   }
   $("#lic-c").textContent=licE.length;
-  let html=`<div class="table-scroll"><table class="dat"><thead><tr><th>License #</th><th>Type</th><th>Status</th><th>Most recent issue</th><th>Expires</th><th>Inactive date</th><th>Units</th><th>Business name</th></tr></thead><tbody>`;
+  const cartoOnlyCt=licE.filter(L=>L._cartoOnly).length;
+  let html=cartoOnlyCt?`<div class="banner">${cartoOnlyCt} license${cartoOnlyCt===1?"":"s"} below ${cartoOnlyCt===1?"is":"are"} marked <b>CARTO</b>: listed in the City's open-data mirror (Carto) but missing from the live L&amp;I feed (Eclipse), which L&amp;I's property-history page and Atlas also use. Verify with L&amp;I.</div>`:"";
+  html+=`<div class="table-scroll"><table class="dat"><thead><tr><th>License #</th><th>Type</th><th>Status</th><th>Most recent issue</th><th>Expires</th><th>Inactive date</th><th>Units</th><th>Business name</th></tr></thead><tbody>`;
   licE.forEach(L=>{
     const meta=analyzeLicenseRow(L);
     const statusText=meta.isActive?"ACTIVE":(meta.displayStatus||"—");
     html+=`<tr>
-      <td class="k">${esc(L.licensenum||"—")}</td>
+      <td class="k">${esc(L.licensenum||"—")}${L._cartoOnly?' <span class="pill open" title="In Carto only — missing from Eclipse">CARTO</span>':""}</td>
       <td>${esc(L.licensetype||"—")}</td>
       <td>${meta.isActive?'<span class="pill complied">ACTIVE</span>':'<span class="pill open">'+esc(statusText)+'</span>'}</td>
       <td>${fmtDate(L.mostrecentissuedate)}</td>
@@ -2750,6 +2769,8 @@ function renderBrief({opaRow,lic,licenseSummary,openViol,allViol,t311}){
     verdict=`<b>All ${rentalSummary.count} rental-type license record(s) on file are active.</b> Eclipse also lists <b>${allSummary.count}</b> total license record(s) including non-rental types (high-rise, food service, etc.).${expDate?` Primary rental-type expiration: ${expDate}.`:""}`;
     vclass="good";
   }
+
+  if(rentalRows.some(L=>L._cartoOnly)) verdict+=` <i>Note: at least one rental-type license above appears in the City's Carto open-data mirror but not in Eclipse (the live L&amp;I feed) — verify with L&amp;I.</i>`;
 
   let openSection="";
   if(openCt===0){
@@ -3892,6 +3913,10 @@ async function lookup(opa){
     if(seq !== lookupSeq) return;
     updateLookupProgress(seq,90,"Preparing property report...");
 
+    // Eclipse can omit licenses the Carto mirror still lists. Cross-reference Carto
+    // so they aren't reported as missing; the drift panel keeps the raw Eclipse rows.
+    const licEclipse=lic;
+    lic=mergeCartoOnlyLicenses(licEclipse,licC);
     const licenseSummary=summarizeLicenses(lic);
     const unfitOpen=ovE.filter(isUnfitViolation).length;
     renderKPIs({licenseSummary,openCt:ovE.length,unfitCt:unfitOpen,t311Ct:t311.length,allViolCt:allViol.length});
@@ -3899,7 +3924,7 @@ async function lookup(opa){
     renderOpenViolations(ovE);
     renderViolHistory(allViol);
     render311(t311);
-    renderDriftLicense(lic,licC,!cartoLicFailed);
+    renderDriftLicense(licEclipse,licC,!cartoLicFailed);
     renderDriftViolations(allViol,cartoVDist,!cartoViolFailed);
     renderBrief({opaRow,lic,licenseSummary,openViol:ovE,allViol,t311});
     renderPermits(permits);

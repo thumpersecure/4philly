@@ -4,7 +4,8 @@ import {
   asDateMs, dateKey, haversineM,
   normalizeAddr, addrLooksSame, scoreAddressMatch, houseNumsMatch,
   compareLicenseField, ADDR_ABBR,
-  buildViolationDist, normStatus, statusHistogram
+  buildViolationDist, normStatus, statusHistogram,
+  mergeCartoOnlyLicenses
 } from '../lib/matching.mjs';
 
 // ---------------------------------------------------------------------------
@@ -319,4 +320,32 @@ test('scoreAddressMatch: exact parcel out-ranks a neighboring range that contain
 test('range fix does not weaken wrong-number / wrong-street rejection', () => {
   assert.equal(scoreAddressMatch('12 Main St', '1234 Main St'), 0);
   assert.ok(!addrLooksSame('315 N 12th St', '400-10 N 12th St')); // ranges disjoint
+});
+
+// ---------------------------------------------------------------------------
+// License cross-reference: Eclipse can omit licenses that Carto still has
+// (Rental 602204 at OPA 881519440), which made 4PHILLY say "none on file".
+// ---------------------------------------------------------------------------
+
+test('mergeCartoOnlyLicenses: appends Carto rows Eclipse lacks, tagged, without touching Eclipse rows', () => {
+  const e = [{ licensenum: '783153', licensetype: 'Food', licensestatus: 'Active' }];
+  const c = [
+    { licensenum: '783153', licensetype: 'Food', licensestatus: 'Inactive' }, // in both: Eclipse wins
+    { licensenum: '602204', licensetype: 'Rental', licensestatus: 'Active' }, // Carto only
+    { licensenum: ' 602204 ', licensetype: 'Rental', licensestatus: 'Active' }, // dup of the above
+    { licensetype: 'Rental' } // no number: cannot pair, skipped
+  ];
+  const out = mergeCartoOnlyLicenses(e, c);
+  assert.equal(out.length, 2);
+  assert.equal(out[0], e[0]);
+  assert.equal(out[0].licensestatus, 'Active');
+  assert.equal(out[0]._cartoOnly, undefined);
+  assert.equal(out[1].licensenum, '602204');
+  assert.equal(out[1]._cartoOnly, true);
+});
+
+test('mergeCartoOnlyLicenses: tolerates empty or non-array inputs', () => {
+  assert.deepEqual(mergeCartoOnlyLicenses(null, undefined), []);
+  assert.equal(mergeCartoOnlyLicenses([], [{ licensenum: '1' }]).length, 1);
+  assert.equal(mergeCartoOnlyLicenses([{ licensenum: '1' }], []).length, 1);
 });
