@@ -53,6 +53,16 @@
        <lastmod>2026-08-01</lastmod>
   </url>
 
+  <url>
+       <loc>https://4philly.net/about.html</loc>
+       <lastmod>2026-10-06</lastmod>
+  </url>
+
+  <url>
+       <loc>https://4philly.net/contact.html</loc>
+       <lastmod>2026-10-06</lastmod>
+  </url>
+
   <!-- BEGIN generated: property pages (tools/generate-property-pages.mjs) -->
   <url>
        <loc>https://4philly.net/p/</loc>
