@@ -1410,6 +1410,64 @@
     </div>
   </section>
 
+  <section id="about-home" class="impact-hero" aria-label="About 4PHILLY and how it works">
+    <div class="impact-inner">
+      <div class="impact-eyebrow">What this is</div>
+      <h2 class="impact-h">One search for every public record on a Philadelphia address</h2>
+      <p class="impact-lede">In Philadelphia, the facts about a single rental property are scattered across at least four City systems that don't talk to each other &mdash; the rental-license portal, the Licenses &amp; Inspections (L&amp;I) violation record, the Philly311 complaint feed, and the permits-and-certifications database. In practice, that fragmentation means the full story of a building is available to almost no one. 4PHILLY closes that gap: type an address, a building name, or a 9-digit OPA account number, and it pulls those records into a single, readable view &mdash; for free, with no account and nothing stored.</p>
+
+      <div class="impact-cols">
+        <div class="impact-col">
+          <h3>What you can check</h3>
+          <p>Rental and business license status (and whether it has lapsed), open and historical L&amp;I code violations, Philly311 complaints filed against the property, building permits and certifications, and the City Council district and councilmember who represent the address. Every record is shown verbatim as the City publishes it.</p>
+        </div>
+        <div class="impact-col">
+          <h3>Where the data comes from</h3>
+          <p>4PHILLY reads directly from the City's own authoritative sources, live: the Eclipse system behind li.phila.gov for licenses and violations, and the Carto open-data mirror for historical records and city-wide scans. When two sources disagree, it flags the discrepancy instead of hiding it, and treats the authoritative record as controlling.</p>
+        </div>
+      </div>
+
+      <h3 style="font-family:'Archivo',sans-serif;font-size:18px;margin:36px 0 4px;color:var(--ink)">Why a licensed address matters</h3>
+      <p style="font-size:15px;line-height:1.65;color:var(--ink-dim);margin:0 0 20px">Under Philadelphia Code &sect; 9-3902, a landlord may not collect rent on a property that requires a rental license unless a valid license is currently in force. An expired or missing license isn't a clerical detail &mdash; it goes directly to whether the person asking for your rent check is legally entitled to it. The City's public map tools can lag up to 60 days behind on a lapsed license, publishing the later internal &ldquo;Inactive&rdquo; date instead of the expiration date that actually carries legal weight. Surfacing that gap &mdash; so a renter sees the real status today &mdash; is one of the main reasons 4PHILLY exists.</p>
+
+      <h3 style="font-family:'Archivo',sans-serif;font-size:18px;margin:28px 0 12px;color:var(--ink)">Common questions</h3>
+      <div class="impact-cols">
+        <div class="impact-col">
+          <h3>Is it really free?</h3>
+          <p>Yes. There is no account, no login, no paywall, and nothing is stored on the server. Every record shown is public information the City of Philadelphia already publishes.</p>
+        </div>
+        <div class="impact-col">
+          <h3>Can a landlord see that I checked?</h3>
+          <p>No. These are public records. 4PHILLY never notifies a property owner that an address was searched, and keeps no record of who looked up what.</p>
+        </div>
+        <div class="impact-col">
+          <h3>How current is the data?</h3>
+          <p>Address lookups read the City's Eclipse system live; city-wide scans use the City's daily-refreshed open data. For anything consequential, confirm the record at <a href="https://atlas.phila.gov/" target="_blank" rel="noopener">atlas.phila.gov</a> as of today.</p>
+        </div>
+        <div class="impact-col">
+          <h3>Is this legal advice?</h3>
+          <p>No. 4PHILLY provides legal <em>information</em>, not legal advice. For advice about a specific situation, contact a housing attorney or Community Legal Services (<a href="tel:+12159813700">215-981-3700</a>).</p>
+        </div>
+      </div>
+
+      <p class="impact-foot">New here? Read <a href="about.html">About 4PHILLY</a> for the full methodology and data sources, browse the <a href="blog/">guides &amp; articles</a>, or <a href="contact.html">get in touch</a>. 4PHILLY is an independent, non-governmental tool &mdash; not operated by, affiliated with, or endorsed by the City of Philadelphia.</p>
+    </div>
+  </section>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Is 4PHILLY really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. There is no account, no login, no paywall, and nothing is stored on the server. Every record shown is public information the City of Philadelphia already publishes." } },
+      { "@type": "Question", "name": "Can a landlord see that I checked their property?", "acceptedAnswer": { "@type": "Answer", "text": "No. These are public records. 4PHILLY never notifies a property owner that an address was searched, and keeps no record of who looked up what." } },
+      { "@type": "Question", "name": "How current is the data on 4PHILLY?", "acceptedAnswer": { "@type": "Answer", "text": "Address lookups read the City's Eclipse system live; city-wide scans use the City's daily-refreshed open data. For anything consequential, confirm the record at atlas.phila.gov as of today. The City's public map tools can lag up to 60 days behind on a lapsed rental license." } },
+      { "@type": "Question", "name": "Is 4PHILLY legal advice?", "acceptedAnswer": { "@type": "Answer", "text": "No. 4PHILLY provides legal information, not legal advice. For advice about a specific situation, contact a housing attorney or a legal-aid organization such as Community Legal Services (215-981-3700)." } },
+      { "@type": "Question", "name": "Why does a rental license matter in Philadelphia?", "acceptedAnswer": { "@type": "Answer", "text": "Under Philadelphia Code § 9-3902, a landlord may not collect rent on a property that requires a rental license unless a valid license is currently in force. An expired or missing license goes directly to whether the landlord is legally entitled to collect rent." } }
+    ]
+  }
+  </script>
+
   <footer class="footer">
   <div class="footer-row"><b>WHY THIS EXISTS</b> &nbsp; Landlords don't volunteer open violations, a dead rental license, or a building's 311 history — but you're the one who has to live with them. Two minutes here before you sign can save your deposit, spare you a lease you can't get out of, and keep you out of a unit the City has already flagged. Look it up, then send it to anyone you know who's apartment-hunting.</div>
   <div class="footer-row"><b>EMERGENCY &amp; TENANT HOTLINES</b> &nbsp; <a href="tel:911">911 (Police / Fire / Medical)</a> · <a href="tel:+18002221222">Poison Control 1-800-222-1222</a> · <a href="tel:+12156869500">Philadelphia Tenant Hotline 215-686-9500</a> · <a href="tel:+12159813700">Community Legal Services 215-981-3700</a> · <a href="https://phillytenant.org" target="_blank" rel="noopener">Philadelphia Tenants Union</a> · <a href="tel:+18007997233">National DV Hotline 1-800-799-7233 (text START to 88788)</a><br><small style="color:var(--ink-mute)">This app does not provide emergency services. For immediate danger, call 911.</small></div>

@@ -179,6 +179,7 @@ function propertyPage(p) {
 <meta charset="utf-8">
 <script>(function(){try{if(localStorage.getItem('4p-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,follow">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <meta property="og:title" content="${esc(title)}">
@@ -324,6 +325,7 @@ function hubPage(props) {
 <meta charset="utf-8">
 <script>(function(){try{if(localStorage.getItem('4p-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,follow">
 <title>Philadelphia Property Record Snapshots | 4PHILLY</title>
 <meta name="description" content="${esc(desc)}">
 <meta property="og:title" content="Philadelphia Property Record Snapshots | 4PHILLY">
@@ -404,10 +406,12 @@ async function updateSitemap(props) {
   const xml = await readFile(SITEMAP, "utf8");
   const start = xml.indexOf(BEGIN), end = xml.indexOf(END);
   if (start === -1 || end === -1) throw new Error("sitemap.xml is missing the generated-block markers");
-  const entries = [`  <url>\n       <loc>https://4philly.net/p/</loc>\n       <lastmod>${SNAPSHOT_DATE}</lastmod>\n  </url>`]
-    .concat(props.map((p) => `  <url>\n       <loc>https://4philly.net/p/${p.opa}.html</loc>\n       <lastmod>${SNAPSHOT_DATE}</lastmod>\n  </url>`))
-    .join("\n\n");
-  const next = xml.slice(0, start + BEGIN.length) + "\n" + entries + "\n  " + xml.slice(end);
+  // Property snapshot pages carry <meta name="robots" content="noindex,follow">,
+  // so they are deliberately kept OUT of the sitemap — a sitemap should list only
+  // pages intended for indexing. The block is left empty but the markers remain
+  // so this function keeps working on future runs.
+  void props;
+  const next = xml.slice(0, start + BEGIN.length) + "\n  " + xml.slice(end);
   await writeFile(SITEMAP, next);
 }
 
