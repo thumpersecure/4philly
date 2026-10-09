@@ -294,6 +294,13 @@ test('houseNumsMatch: number inside the range matches, outside does not', () => 
   assert.ok(!houseNumsMatch('310', '315-23'));  // 310 is below the range
 });
 
+test('houseNumsMatch: opposite side of the street (parity) never matches', () => {
+  assert.ok(!houseNumsMatch('315', '314-22'));  // odd vs even range
+  assert.ok(!houseNumsMatch('314-22', '315'));
+  assert.ok(houseNumsMatch('316', '314-22'));
+  assert.ok(scoreAddressMatch('315 N 12th', '314-22 N 12TH ST') === 0);
+});
+
 test('addrLooksSame: typed base number matches ranged OPA parcel', () => {
   assert.ok(addrLooksSame('315 N 12th St', '315-23 N 12TH ST'));
   assert.ok(addrLooksSame('315-23 N 12th St', '315 N 12th St'));
@@ -305,9 +312,11 @@ test('scoreAddressMatch: ranged parcel auto-selects for the base number', () => 
 });
 
 test('scoreAddressMatch: number INSIDE a range still auto-selects', () => {
-  // "318" is inside the 315..323 parcel — a real match (the hundred-block
-  // fallback depends on this), scoring just under an exact-base match.
-  assert.ok(scoreAddressMatch('318 N 12th St', '315-23 N 12TH ST') >= 0.9);
+  // "319" is inside the 315..323 parcel (same odd side) — a real match (the
+  // hundred-block fallback depends on this), scoring just under an exact-base match.
+  assert.ok(scoreAddressMatch('319 N 12th St', '315-23 N 12TH ST') >= 0.9);
+  // "318" is within the numeric span but on the even (opposite) side: no match.
+  assert.equal(scoreAddressMatch('318 N 12th St', '315-23 N 12TH ST'), 0);
 });
 
 test('scoreAddressMatch: exact parcel out-ranks a neighboring range that contains the number', () => {

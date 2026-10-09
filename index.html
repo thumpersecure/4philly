@@ -1814,6 +1814,9 @@ function houseNumsMatch(a,b){
   };
   const ra=toRange(a), rb=toRange(b);
   if(!ra||!rb) return false;
+  // Odd and even numbers are opposite sides of the street, so a range only
+  // covers numbers of its own parity ("314-22" never contains 315).
+  if(ra[0]%2!==rb[0]%2) return false;
   // Same parcel if the ranges overlap (covers base-vs-range and range-vs-range).
   return ra[0]<=rb[1]&&rb[0]<=ra[1];
 }
@@ -1889,7 +1892,21 @@ async function queryAndScoreAddress(addr,patterns,limit){
   // Score each candidate against the typed address. Drop candidates whose house
   // number contradicts the input (scoreAddressMatch returns 0 only as a hard
   // reject) — surfacing a rejected mismatch as a "match" is worse than "no match".
-  return deduped.map(r=>({r,s:scoreAddressMatch(addr,r.location)})).filter(x=>x.s>0);
+  let scored=deduped.map(r=>({r,s:scoreAddressMatch(addr,r.location)})).filter(x=>x.s>0);
+  // No confident hit from the ArcGIS layer (it can be republished incomplete):
+  // also search the Carto mirror and merge, so the true parcel can still win.
+  if(!scored.some(x=>x.s>=0.9)){
+    const cr=await Promise.allSettled(patterns.map(p=>
+      cartoOPAQuery(`UPPER(location) LIKE '${sqlSafeStr(p)}'`,limit)));
+    const have=new Set(scored.map(x=>x.r.parcel_number));
+    cr.filter(s=>s.status==="fulfilled").flatMap(s=>s.value).forEach(r=>{
+      if(have.has(r.parcel_number)) return;
+      have.add(r.parcel_number);
+      const s=scoreAddressMatch(addr,r.location);
+      if(s>0) scored.push({r,s});
+    });
+  }
+  return scored;
 }
 
 async function resolveAddress(addr){
@@ -1920,10 +1937,22 @@ async function resolveAddress(addr){
   return use.sort((a,b)=>b.s-a.s).map(x=>Object.assign({_score:x.s},x.r));
 }
 
+// Carto mirror of the OPA layer. The City's ArcGIS parcel layer can be
+// republished incomplete (2026-10-09: 324k of 584k parcels, Goldtex's
+// 315-23 N 12th among the missing), so parcel lookups fall back to this table.
+// Carto has no geocode_lat/lon columns or council districts; coordinates come
+// from the_geom (EPSG:4326). Rows are tagged _source:"carto" so the UI can say so.
+async function cartoOPAQuery(where,limit){
+  const sql=`SELECT parcel_number,location,owner_1,market_value,year_built,zip_code,zoning,census_tract,category_code,category_code_description,building_code_description,ST_Y(the_geom) AS geocode_lat,ST_X(the_geom) AS geocode_lon FROM opa_properties_public WHERE ${where} LIMIT ${limit}`;
+  const rows=await cartoQuery(sql);
+  return rows.map(r=>Object.assign(r,{_source:"carto"}));
+}
 async function getOPADetails(opa){
   assertOPA(opa);
   const rows=await eclipseQuery("opa_properties_public_pde",`parcel_number='${opa}'`,"*");
-  return rows[0]||null;
+  if(rows[0]) return rows[0];
+  const c=await cartoOPAQuery(`parcel_number='${opa}'`,1).catch(()=>[]);
+  return c[0]||null;
 }
 
 // Find other parcels held under an owner name. `mode` is 'exact' (owner_1
@@ -3869,6 +3898,10 @@ async function lookup(opa){
         banner(`No OPA record for parcel <code>${esc(opa)}</code>. The parcel may have been re-numbered, merged, or subdivided. Try searching by address, or <a href="https://atlas.phila.gov/" target="_blank" rel="noopener">check Atlas</a> for the current parcel number.`,true);
         return;
       }
+    }
+    if(opaRow._source==="carto"&&!resolutionBannerHtml){
+      resolutionBannerHtml=`<b>Parcel details from the Carto mirror.</b> The City's live parcel layer (ArcGIS) is missing this parcel right now, so owner, value and address come from the open-data mirror. Council district isn't available from the mirror. Licenses and violations are still live from Eclipse.`;
+      resolutionBannerErr=false;
     }
     // Progress stays monotonic: the stale-OPA path above reports 25/30/45, so
     // the 60% step happens only once a parcel is in hand.
