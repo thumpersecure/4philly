@@ -1,0 +1,28 @@
+og-contact.png source record (rendered by tools/og-sources/gen_contact.py)
+Queried: 2026-10-11, live Carto SQL API https://phl.carto.com/api/v2/sql
+
+Record shown (Carto business_licenses, licensetype='Rental'):
+  address         4151 N 8TH ST, 19140-2201
+  opa_account_num 433349500
+  licensenum      904213
+  licensestatus   Expired
+  expirationdate  2026-08-24T17:14:02Z  (shown as "Aug 24, 2026")
+  inactivedate    null
+  numberofunits   1
+  open violations 16 rows in violations (violationstatus='OPEN'), spread over 2 case numbers
+                  (678221 and one other; violation dates 2017-01-24 .. 2019-05-02)
+  (an older Rental license 321291 for the same OPA is 'Closed' since 2020; no Active rental license on the parcel)
+No owner/tenant names are shown. Verdict wording mirrors index.html ("Expired", red --red #c62f28).
+
+Selection query:
+SELECT bl.address, bl.zip, bl.licensenum, bl.licensestatus, bl.expirationdate, bl.inactivedate,
+       bl.opa_account_num, bl.numberofunits, COUNT(v.*) AS openviol
+FROM business_licenses bl
+JOIN violations v ON v.opa_account_num = bl.opa_account_num AND v.violationstatus = 'OPEN'
+WHERE bl.licensetype='Rental' AND bl.licensestatus='Expired' AND bl.expirationdate < NOW()
+  AND bl.expirationdate > NOW() - interval '120 days' AND bl.numberofunits='1'
+GROUP BY 1,2,3,4,5,6,7,8 ORDER BY openviol DESC LIMIT 15
+(top row = 4151 N 8TH ST, 16)
+
+Verification queries: licenses by opa_account_num='433349500'; violations by opa_account_num='433349500' AND violationstatus='OPEN'.
+Caveat: Carto is the City's daily mirror; Eclipse is authoritative (see index.html).

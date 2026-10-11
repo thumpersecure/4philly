@@ -1,0 +1,16 @@
+OG card: blog/img/og-blog-index-v2.png  (generator: tools/og-sources/gen_blog.py)
+Source: City of Philadelphia open data, Carto API https://phl.carto.com/api/v2/sql
+Fetched: 2026-10-11
+Points plotted at true lon/lat (equirectangular, x scaled by cos(40deg)); no points fabricated or jittered.
+Deterministic thinning (cartodb_id modulus) is the only sampling.
+
+Violations (red) SQL:
+SELECT ST_X(the_geom) AS x, ST_Y(the_geom) AS y FROM violations WHERE violationstatus = 'OPEN' AND the_geom IS NOT NULL AND violationdate >= '2025-01-01' AND cartodb_id % 10 = 0 ORDER BY cartodb_id LIMIT 9000
+Rows returned/plotted: 5752
+
+Licenses (blue) SQL:
+SELECT ST_X(the_geom) AS x, ST_Y(the_geom) AS y FROM business_licenses WHERE licensetype = 'Rental' AND licensestatus = 'Active' AND the_geom IS NOT NULL AND cartodb_id % 20 = 0 ORDER BY cartodb_id LIMIT 6000
+Rows returned/plotted: 4684
+
+Total points plotted: 10436
+(plotted after filtering to lon -75.30..-74.94, lat 39.86..40.15)

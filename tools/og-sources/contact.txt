@@ -1,0 +1,7 @@
+contact OG card — background art generated with ElevenLabs
+model: gpt-image-2 (1280x720), flow K9EbYUDTYEk5N1BlxHkO, generated 2026-10-11
+prompt: flat editorial illustration, Philadelphia-flag-blue gradient, stylized Philadelphia
+skyline (City Hall tower w/ William Penn, Liberty Place), glowing paper envelope with red
+speech-bubble badge on the right, empty left half, no text/letters/numbers/logos.
+kept: contact-bg.png (variation 2 of 2). Text composited by gen_contact.py.
+No data claims on this card.
