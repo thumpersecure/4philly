@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Render og-main.png (1200x630): phone mockup of a real 4PHILLY lookup result.
-Record + query are documented in contact.txt. Run: python3 gen_contact.py"""
+Record + query are documented in main.txt. Run: python3 gen_main.py"""
 import subprocess, pathlib
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HTML = pathlib.Path("/tmp/og-main.html")
@@ -46,8 +46,8 @@ h1 em{font-style:normal;color:var(--red)}
 <div class="glow"></div>
 <div class="mark"><span>4</span><b>PHILLY</b></div>
 <div class="copy">
-  <h1>See what the <em>City</em> knows.</h1>
-  <div class="sub">Questions? <b>4philly.net/contact</b></div>
+  <h1>Is your <em>landlord</em> legit?</h1>
+  <div class="sub">Check the City record. <b>4philly.net</b></div>
 </div>
 <div class="foot">Real City open data &middot; Licenses &middot; Violations</div>
 <div class="phone"><div class="screen"><div class="notch"></div>
