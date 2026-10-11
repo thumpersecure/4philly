@@ -46,8 +46,8 @@ h1 em{font-style:normal;color:var(--red)}
 <div class="glow"></div>
 <div class="mark"><span>4</span><b>PHILLY</b></div>
 <div class="copy">
-  <h1>Is your <em>landlord</em> legit?</h1>
-  <div class="sub">Check the City record. <b>4philly.net</b></div>
+  <h1>See what the <em>City</em> knows.</h1>
+  <div class="sub"><b>Is your landlord legit?</b></div>
 </div>
 <div class="foot">Real City open data &middot; Licenses &middot; Violations</div>
 <div class="phone"><div class="screen"><div class="notch"></div>
