@@ -5,7 +5,7 @@ import {
   normalizeAddr, addrLooksSame, scoreAddressMatch, houseNumsMatch,
   compareLicenseField, ADDR_ABBR,
   buildViolationDist, normStatus, statusHistogram,
-  mergeCartoOnlyLicenses
+  mergeCartoOnlyLicenses, addrAnchoredVariants
 } from '../lib/matching.mjs';
 
 // ---------------------------------------------------------------------------
@@ -357,4 +357,46 @@ test('mergeCartoOnlyLicenses: tolerates empty or non-array inputs', () => {
   assert.deepEqual(mergeCartoOnlyLicenses(null, undefined), []);
   assert.equal(mergeCartoOnlyLicenses([], [{ licensenum: '1' }]).length, 1);
   assert.equal(mergeCartoOnlyLicenses([{ licensenum: '1' }], []).length, 1);
+});
+
+// ---------------------------------------------------------------------------
+// Address parsing: unit/pasted-address stripping, suffix tokens, ordinals,
+// anchored house-number patterns.
+// ---------------------------------------------------------------------------
+
+test('normalizeAddr: #unit, "2nd Fl", hyphenated unit and pasted city/state/zip are stripped', () => {
+  assert.equal(normalizeAddr('1234 Market St #2B'), '1234 MARKET ST');
+  assert.equal(normalizeAddr('1234 Market St 2nd Fl'), '1234 MARKET ST');
+  assert.equal(normalizeAddr('1234 Market St Apt 2-B'), '1234 MARKET ST');
+  assert.equal(normalizeAddr('1234 Market St, Philadelphia, PA 19107'), '1234 MARKET ST');
+  assert.equal(normalizeAddr('1234 N. Broad Street Unit 4'), '1234 N BROAD STREET');
+});
+
+test('addrLooksSame: TER/PKWY/etc. are suffixes, not street names', () => {
+  assert.equal(addrLooksSame('123 Main Ter', '123 Walnut Ter'), false);
+  assert.equal(addrLooksSame('123 Main Terrace', '123 MAIN TER'), true);
+});
+
+test('scoreAddressMatch: "12" and "12TH" are the same street token', () => {
+  assert.ok(scoreAddressMatch('315 N 12 St', '315-23 N 12TH ST') >= 0.9);
+  assert.ok(scoreAddressMatch('1234 Spruce Terrace', '1234 SPRUCE TER') >= 0.9);
+});
+
+test('addrAnchoredVariants: house number is anchored (no 1012/1200 crowd-out)', () => {
+  const v = addrAnchoredVariants('10 S 2nd Street');
+  assert.ok(v.includes('10 %S%2ND%STREET%'));
+  assert.ok(v.includes('10 %S%2ND%ST%'));
+  assert.ok(v.includes('10-%S%2ND%ST%'));
+  assert.ok(v.every(p => !p.startsWith('%')));
+  assert.ok(addrAnchoredVariants('1234-36 Main St').includes('1234 %MAIN%ST%'));
+  assert.deepEqual(addrAnchoredVariants('Broad St'), ['%BROAD%ST%']);
+});
+
+import { certStreetKey } from '../lib/matching.mjs';
+test('certStreetKey: number/street split and shard name', () => {
+  assert.deepEqual(certStreetKey('2203 S 7th St'), { num: '2203', street: 'S 7TH ST', file: 'S_7TH_ST' });
+  assert.deepEqual(certStreetKey('2203-05 S 7TH ST #2B'), { num: '2203-05', street: 'S 7TH ST', file: 'S_7TH_ST' });
+  assert.deepEqual(certStreetKey('2306R E Fletcher St').num, '2306R');
+  assert.equal(certStreetKey('Rittenhouse Square').num, '');
+  assert.equal(certStreetKey('').file, '');
 });

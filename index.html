@@ -1177,7 +1177,7 @@
     <div class="search">
       <div class="field field-primary">
         <label for="addr">Enter a property address or building name</label>
-        <input id="addr" type="text" placeholder="Type here to search by address, property name, or OPA" autocomplete="off" inputmode="search">
+        <input id="addr" type="text" placeholder="Type here to search by address, property name, or OPA" autocomplete="off" inputmode="search" enterkeyhint="search" autocapitalize="off" spellcheck="false">
       </div>
       <div class="search-go">
         <button class="btn" id="go">Look up</button>
@@ -1774,9 +1774,17 @@ function validateInput(raw,fieldLabel){
 }
 function normalizeAddr(raw){
   return String(raw||'').trim().toUpperCase()
-    .replace(/[.,#%_]/g,'')
-    .replace(/\b(APT|UNIT|STE|SUITE|FL|FLOOR|RM|ROOM)\b\s*\w*/g,'')
-    .replace(/\s+/g,' ').trim();
+    .replace(/#\s*[\w-]+/g,' ')                              // "#2B" unit
+    .replace(/\b\d+(?:ST|ND|RD|TH)\s+(?:FL|FLOOR)\b/g,' ')   // "2ND FL"
+    .replace(/[.,]/g,' ')
+    .replace(/[#%_]/g,'')
+    .replace(/\b(APT|UNIT|STE|SUITE|FL|FLOOR|RM|ROOM)\b\s*[\w-]*/g,'')
+    .replace(/\s+/g,' ').trim()
+    // Pasted full addresses: drop trailing city / state / zip.
+    .replace(/\s+(?:PHILADELPHIA|PHILA|PHILLY)\b.*$/,'')
+    .replace(/\s+PA\b(?:\s+\d{5}(?:-\d{4})?)?$/,'')
+    .replace(/\s+\d{5}(?:-\d{4})?$/,'')
+    .trim();
 }
 function sqlSafeStr(s){
   return s.replace(/'/g,"''").replace(/\\/g,'').replace(/;/g,'').replace(/--/g,'');
@@ -1788,6 +1796,20 @@ function addrVariants(addr){
   const swapped=parts.map(p=>ADDR_ABBR[p]||p);
   const variant='%'+swapped.join('%')+'%';
   return [...new Set([primary,variant])];
+}
+// Anchored-house-number variant of addrVariants (see lib/matching.mjs).
+function addrAnchoredVariants(addr){
+  const parts=normalizeAddr(addr).split(' ').filter(Boolean);
+  const m=/^(\d+)(?:-\d+)?([A-Z]?)$/.exec(parts[0]||'');
+  if(!m||parts.length<2) return addrVariants(addr);
+  const num=m[1]+m[2];
+  const rests=[...new Set([parts.slice(1),parts.slice(1).map(p=>ADDR_ABBR[p]||p)].map(r=>r.join('%')))];
+  const out=[];
+  for(const r of rests){
+    out.push(num+' %'+r+'%',num+'-%'+r+'%');
+    if(!m[2]) out.push(num+'_ %'+r+'%');
+  }
+  return out;
 }
 // Directional tokens canonicalized to a single form for comparison.
 const DIR_CANON={N:'N',NORTH:'N',S:'S',SOUTH:'S',E:'E',EAST:'E',W:'W',WEST:'W'};
@@ -1846,8 +1868,8 @@ function scoreAddressMatch(input,loc){
   }
   // Skip the leading house-number/range token on both sides before comparing
   // street names, so "315-23" isn't treated as a street-name token.
-  const nameI=ti.slice(inNum?1:0).filter(dropSD);
-  const setL=new Set(tl.slice(locNum?1:0).filter(dropSD));
+  const nameI=ti.slice(inNum?1:0).filter(dropSD).map(ordNorm);
+  const setL=new Set(tl.slice(locNum?1:0).filter(dropSD).map(ordNorm));
   if(nameI.length){ score+=0.3*(nameI.filter(t=>setL.has(t)).length/nameI.length); }
   else { score+=0.3; }
   const dirI=ti.filter(t=>DIR_CANON[t]).map(t=>DIR_CANON[t]);
@@ -1910,7 +1932,7 @@ async function queryAndScoreAddress(addr,patterns,limit){
 }
 
 async function resolveAddress(addr){
-  let use=await queryAndScoreAddress(addr,addrVariants(addr),25);
+  let use=await queryAndScoreAddress(addr,addrAnchoredVariants(addr),25);
 
   // Range-parcel fallback. Philadelphia merges some addresses into a single
   // parcel stored as a hyphenated range, e.g. "314-22 N 12TH ST". A typed
@@ -1951,7 +1973,9 @@ async function getOPADetails(opa){
   assertOPA(opa);
   const rows=await eclipseQuery("opa_properties_public_pde",`parcel_number='${opa}'`,"*");
   if(rows[0]) return rows[0];
-  const c=await cartoOPAQuery(`parcel_number='${opa}'`,1).catch(()=>[]);
+  // No .catch: a Carto outage must not read as "parcel not found" (which tells the
+  // user the parcel was re-numbered). Callers that tolerate failure already catch.
+  const c=await cartoOPAQuery(`parcel_number='${opa}'`,1);
   return c[0]||null;
 }
 
@@ -2074,15 +2098,22 @@ async function get311ForAddress(loc){
     patterns=[...new Set(['%'+keyTokens.join('%')+'%','%'+tokens.join('%')+'%'])];
   }
   const since=new Date(Date.now()-1000*60*60*24*730).toISOString().slice(0,10);
-  const results=await Promise.all(patterns.map(p=>
-    cartoQuery(`SELECT cartodb_id,requested_datetime,service_name,status,agency_responsible,subject,address FROM public_cases_fc WHERE UPPER(address) LIKE '${sqlSafeStr(p)}' AND requested_datetime >= '${since}' ORDER BY requested_datetime DESC LIMIT 500`).catch(e=>{console.warn('311 query failed:',e);return [];})
+  // allSettled, not a per-query catch-to-[]: swallowing a failed query made an
+  // outage render as "no 311 complaints" with no warning (t311Failed never fired).
+  const settled=await Promise.allSettled(patterns.map(p=>
+    cartoQuery(`SELECT cartodb_id,requested_datetime,service_name,status,agency_responsible,subject,address FROM public_cases_fc WHERE UPPER(address) LIKE '${sqlSafeStr(p)}' AND requested_datetime >= '${since}' ORDER BY requested_datetime DESC LIMIT 500`)
   ));
+  const bad311=settled.filter(x=>x.status==="rejected");
+  if(bad311.length===settled.length) throw bad311[0].reason;
+  const results=settled.filter(x=>x.status==="fulfilled").map(x=>x.value);
   const seen=new Set();
-  return results.flat().filter(r=>{
+  const out311=results.flat().filter(r=>{
     const k=r.cartodb_id!=null?String(r.cartodb_id):[r.requested_datetime||"",r.address||"",r.service_name||""].join("|");
     if(seen.has(k)) return false;
     seen.add(k); return true;
   }).sort((a,b)=>new Date(b.requested_datetime)-new Date(a.requested_datetime));
+  Object.defineProperty(out311,"_partial",{value:bad311.length>0,enumerable:false});
+  return out311;
 }
 
 async function getPermits(opa){
@@ -2091,22 +2122,78 @@ async function getPermits(opa){
     "permitnumber,permittype,permitdescription,permitissuedate,status,applicanttype,typeofwork,unit_num,mostrecentinsp,approvedscopeofwork",
     "&resultRecordCount=200&orderByFields=permitissuedate+DESC");
 }
-async function getBuildingCerts(loc){
+async function getBuildingCertsLive(loc){
   if(!loc) return [];
   const base=normalizeAddr(loc).replace(/\b(APT|UNIT|STE|FL|RM)\b.*/,'').trim();
   if(!base) return [];
   const patterns=addrVariants(base);
-  const results=await Promise.all(patterns.map(p=>
+  // allSettled: a failed query must surface (bcertsFailed) rather than read as "no certs".
+  const settledBC=await Promise.allSettled(patterns.map(p=>
     eclipseQuery("BUILDING_CERTS",`UPPER(address) LIKE '${sqlSafeStr(p)}'`,
       "buildingcertnumber,buildingcerttype,inspectiondate,inspectionresult,expirationdate,unit_num,contractorname,address",
-      "&resultRecordCount=200&orderByFields=inspectiondate+DESC").catch(e=>{console.warn('BUILDING_CERTS query failed:',e);return [];})
+      "&resultRecordCount=200&orderByFields=inspectiondate+DESC")
   ));
+  const badBC=settledBC.filter(x=>x.status==="rejected");
+  if(badBC.length===settledBC.length) throw badBC[0].reason;
+  const results=settledBC.filter(x=>x.status==="fulfilled").map(x=>x.value);
   const seen=new Set();
-  return results.flat().filter(r=>{
+  const outBC=results.flat().filter(r=>{
     const k=r.buildingcertnumber||(r.address+"|"+r.inspectiondate+"|"+r.buildingcerttype);
     if(seen.has(k)) return false;
     seen.add(k); return true;
   });
+  Object.defineProperty(outBC,"_partial",{value:badBC.length>0,enumerable:false});
+  return outBC;
+}
+
+// Street/number split + shard name for the static cert index (mirrors certStreetKey
+// in lib/matching.mjs; built by tools/build-certs-index.mjs).
+function certStreetKey(addr){
+  const full=normalizeAddr(addr);
+  const m=/^(\d+(?:-\d+)?[A-Z]?)\s+(.+)$/.exec(full);
+  const num=m?m[1]:"", street=m?m[2]:full;
+  return {num,street,file:street.replace(/[^A-Z0-9]+/g,"_").replace(/^_+|_+$/g,"").slice(0,80)};
+}
+// Static fallback for the L&I BUILDING_CERTS layer, which the City's ArcGIS host
+// has been rejecting ("Invalid URL"). Data is the City's own Hub export, rebuilt
+// by tools/build-certs-index.mjs. A missing street file means no certs on file.
+async function getBuildingCertsStatic(loc){
+  const {num,file}=certStreetKey(loc);
+  if(!file||!num){
+    const none=[];
+    Object.defineProperty(none,"_static",{value:{generated:null,summary:{}},enumerable:false});
+    return none;
+  }
+  const [res,metaRes]=await Promise.all([
+    fetch(`data/certs/${file}.json`),
+    fetch("data/certs/meta.json").catch(()=>null)
+  ]);
+  let rows=[],bins={};
+  if(res.ok){
+    const j=await res.json();
+    rows=(j.r||[]).filter(r=>houseNumsMatch(certStreetKey(r.address).num,num));
+    bins=j.b||{};
+  } else if(res.status!==404) throw new Error("cert index HTTP "+res.status);
+  let generated=null;
+  try{ if(metaRes&&metaRes.ok) generated=(await metaRes.json()).generated||null; }catch{}
+  // Current per-type status from BUILDING_CERT_SUMMARY, merged across the
+  // matching buildings (BINs) on this address.
+  const summary={};
+  new Set(rows.map(r=>r.bin).filter(Boolean)).forEach(b=>{
+    Object.entries(bins[b]||{}).forEach(([t,st])=>{ (summary[t] ||= new Set()).add(st); });
+  });
+  Object.defineProperty(rows,"_static",{value:{generated,summary},enumerable:false});
+  Object.defineProperty(rows,"_partial",{value:false,enumerable:false});
+  return rows;
+}
+async function getBuildingCerts(loc){
+  try{
+    return await getBuildingCertsLive(loc);
+  }catch(liveErr){
+    console.warn("live building certs failed; using static index",liveErr);
+    try{ return await getBuildingCertsStatic(loc); }
+    catch(staticErr){ console.warn("static cert index failed",staticErr); throw liveErr; }
+  }
 }
 
 // ---- OPA fallback: spatial + historical resolution ----
@@ -2131,11 +2218,17 @@ async function dorParcelLookup(lat,lng){
   // NOTE: BAESSION_NUMBER does not exist in DOR_Parcel; using "pin" field instead,
   // which is the parcel identification number (closest match to BRT/OPA number).
   const url=`${ECLIPSE}/DOR_Parcel/FeatureServer/0/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects&inSR=4326&outFields=pin,ADDR_SOURCE,ADDR_STD&returnGeometry=false&f=json&resultRecordCount=1`;
-  let r;
-  try{ r=await fetch(url); }catch(e){ return null; }
-  if(!r.ok) return null;
-  let j;
-  try{ j=await r.json(); }catch(e){ return null; }
+  // Bounded: a hung request here used to stall the whole stale-OPA resolution
+  // (and the lookup's progress bar) indefinitely.
+  const ac=new AbortController();
+  const timer=setTimeout(()=>ac.abort(),15000);
+  let r,j;
+  try{
+    r=await fetch(url,{signal:ac.signal});
+    if(!r.ok) return null;
+    j=await r.json();
+  }catch(e){ return null; }
+  finally{ clearTimeout(timer); }
   if(!j.features||!j.features.length) return null;
   const brt=String(j.features[0]?.attributes?.pin||"").trim();
   return /^\d{6,12}$/.test(brt)?brt:null;
@@ -2147,7 +2240,9 @@ async function dorParcelLookup(lat,lng){
 // beyond this is likely a neighboring parcel, not a re-numbered one.
 const SPATIAL_MAX_M=30;
 // Tokens that are street suffixes/directionals rather than the street name.
-const SUFFIX_DIR_TOKENS=new Set(["ST","STREET","AVE","AVENUE","RD","ROAD","BLVD","BOULEVARD","DR","DRIVE","CT","COURT","LN","LANE","PL","PLACE","N","S","E","W","NORTH","SOUTH","EAST","WEST"]);
+const SUFFIX_DIR_TOKENS=new Set(["ST","STREET","AVE","AVENUE","RD","ROAD","BLVD","BOULEVARD","DR","DRIVE","CT","COURT","LN","LANE","PL","PLACE","N","S","E","W","NORTH","SOUTH","EAST","WEST","TER","TERRACE","PKWY","PARKWAY","SQ","SQUARE","CIR","CIRCLE","HWY","HIGHWAY","PLZ","PLAZA","ALY","ALLEY"]);
+// "12TH" and "12" are the same street-name token.
+const ordNorm=t=>t.replace(/^(\d+)(?:ST|ND|RD|TH)$/,'$1');
 // Conservative same-property check: the house number must match AND the addresses
 // must share at least one actual street-name token (so "123 Main St" does not
 // match "123 Walnut St" just because both share the house number and "St").
@@ -2164,8 +2259,8 @@ function addrLooksSame(a,b){
   const dirA=new Set(ta.filter(t=>DIR_CANON[t]).map(t=>DIR_CANON[t]));
   const dirB=new Set(tb.filter(t=>DIR_CANON[t]).map(t=>DIR_CANON[t]));
   if(dirA.size&&dirB.size&&![...dirA].some(d=>dirB.has(d))) return false;
-  const nameA=ta.slice(1).filter(t=>!SUFFIX_DIR_TOKENS.has(t));
-  const nameB=new Set(tb.slice(1).filter(t=>!SUFFIX_DIR_TOKENS.has(t)));
+  const nameA=ta.slice(1).filter(t=>!SUFFIX_DIR_TOKENS.has(t)).map(ordNorm);
+  const nameB=new Set(tb.slice(1).filter(t=>!SUFFIX_DIR_TOKENS.has(t)).map(ordNorm));
   if(!nameA.length||!nameB.size) return false;
   return nameA.some(t=>nameB.has(t));
 }
@@ -3088,8 +3183,18 @@ function renderPermits(rows){
 
 function renderBuildingCerts(rows){
   $("#bcert-c").textContent=rows.length;
+  const st=rows._static;
+  let head="";
+  if(st){
+    const when=st.generated?new Date(st.generated).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"}):"unknown date";
+    head=`<div class="banner">The City's live building-certification service is unavailable, so this tab is showing the City's published data export (as of ${esc(when)}).</div>`;
+    const ent=Object.entries(st.summary||{});
+    if(ent.length){
+      head+=`<p><strong>Current status by type:</strong> `+ent.map(([t,v])=>`${esc(t.replace(/_/g," "))}: ${esc([...v].join(" / "))}`).join(" · ")+`</p>`;
+    }
+  }
   if(!rows.length){
-    $("#bcert-body").innerHTML=`<div class="banner">No building certification records in Eclipse for this address.</div>`;
+    $("#bcert-body").innerHTML=head+`<div class="banner">No building certification records ${st?"in the City's data export":"in Eclipse"} for this address.</div>`;
     return;
   }
   rows.sort((a,b)=>(b.inspectiondate||0)-(a.inspectiondate||0));
@@ -3108,7 +3213,7 @@ function renderBuildingCerts(rows){
     </tr>`;
   });
   html+=`</tbody></table></div>`;
-  $("#bcert-body").innerHTML=html;
+  $("#bcert-body").innerHTML=head+html;
 }
 
 function renderLimitsTab(){
@@ -3819,6 +3924,7 @@ async function lookup(opa){
   recaptchaV3Check('lookup'); // fire-and-forget; scores land in the reCAPTCHA admin console for monitoring, not a blocking gate
   setNow();
   const seq = ++lookupSeq;
+  currentRecord=null;
   setLookupBusy(true);
   updateLookupProgress(seq,10,"Requesting property records...");
   const newHash=`#opa=${opa}`;
@@ -3844,12 +3950,13 @@ async function lookup(opa){
       getPermits(opa).catch(()=>{permitsFailed=true;return [];})
     ]);
 
-    // Record data freshness timestamps
-    dataFreshness.eclipse = Date.now();
-    dataFreshness.carto = Date.now();
-
     // Abort if a newer lookup has started
     if(seq !== lookupSeq) return;
+
+    // Record data freshness timestamps (after the seq check so a superseded
+    // lookup can't write into the new lookup's freshness state)
+    dataFreshness.eclipse = Date.now();
+    dataFreshness.carto = Date.now();
 
     // A banner set by the stale-OPA resolution below must survive to the end of
     // the lookup — the completion block otherwise hides/overwrites it while the
@@ -3878,6 +3985,7 @@ async function lookup(opa){
         const newHash=`#opa=${newOPA}`;
         if(location.hash!==newHash) history.replaceState(null,'',newHash);
         $("#opa").value=newOPA;
+        cartoLicFailed=false;cartoViolFailed=false;permitsFailed=false; // flags describe the parcel actually shown
         [lic,licC,ovE,allViol,cartoVDist,permits]=await Promise.all([
           getBusinessLicenses(newOPA),
           getCartoBusinessLicenses(newOPA).catch(()=>{cartoLicFailed=true;return [];}),
@@ -3913,6 +4021,8 @@ async function lookup(opa){
       get311ForAddress(opaRow.location||"").catch(e=>{console.warn("311 fetch failed",e);t311Failed=true;return [];}),
       getBuildingCerts(opaRow.location||"").catch(e=>{console.warn("building certs failed",e);bcertsFailed=true;return [];})
     ]);
+    if(t311&&t311._partial) t311Failed=true;
+    if(bcerts&&bcerts._partial) bcertsFailed=true;
     // Enforce the 24-month 311 window ONCE, here, so every consumer (KPI tile,
     // 311 tab, Brief, score, export) reports the same count. The SQL cutoff is
     // date-only and Carto can return boundary/stale rows past it.
@@ -3994,6 +4104,7 @@ function banner(msg,isErr){
 
 function resetSearchState({focus=false,showPrompt=false}={}){
   lookupSeq++;
+  currentRecord=null;
   setLookupBusy(false);
   hideLookupProgressNow();
   history.replaceState(null,"",location.pathname+location.search);
@@ -4037,7 +4148,9 @@ $("#go").addEventListener("click",async()=>{
   goBtn.disabled=true;
 
   try{
-  const opa=$("#opa").value.trim();
+  // Tolerate spaces/dashes in a pasted OPA ("88-3309050", "883 309 050").
+  const opaRaw=$("#opa").value.trim();
+  const opa=/^\d[\d\s-]*$/.test(opaRaw)?opaRaw.replace(/[\s-]+/g,""):opaRaw;
   const addrRaw=$("#addr").value.trim();
   if(opa){
     if(!/^\d+$/.test(opa)){ banner("OPA account must use digits only (6–12 digits).",true); return; }
@@ -4048,6 +4161,7 @@ $("#go").addEventListener("click",async()=>{
   // Main box invites "OPA" input; a bare parcel number can never match address/
   // building search, so route it to the existing OPA path (same rule as #opa).
   if(/^\d{6,12}$/.test(addrRaw)){ await lookup(addrRaw); return; }
+  if(/^\d[\d\s-]*$/.test(addrRaw)&&/^\d{9}$/.test(addrRaw.replace(/[\s-]+/g,""))){ await lookup(addrRaw.replace(/[\s-]+/g,"")); return; }
   const addr=validateInput(addrRaw,"address");
   if(addr===null) return;
   const seq = ++lookupSeq;
@@ -4132,7 +4246,8 @@ $("#go").addEventListener("click",async()=>{
     if(seq===lookupSeq) setLookupBusy(false);
   }
   }finally{
-    goBtn.disabled=false;
+    // Don't re-enable if a newer lookup (e.g. started after Reset) is busy.
+    if(!goBtn.classList.contains("busy")) goBtn.disabled=false;
   }
 });
 
@@ -4967,6 +5082,14 @@ function downloadRankingsPDF(){
     URL.revokeObjectURL(url);
   }
 }
+
+window.addEventListener("hashchange",()=>{
+  const m=location.hash.match(/^#opa=(\d{6,12})$/);
+  if(!m) return;
+  switchMode("lookup");
+  $("#opa").value=m[1]; $("#addr").value="";
+  lookup(m[1]);
+});
 
 window.addEventListener("DOMContentLoaded",()=>{
   renderLimitsTab();
