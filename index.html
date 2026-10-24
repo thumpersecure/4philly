@@ -1536,6 +1536,10 @@
 <script>
 const ECLIPSE = "https://services.arcgis.com/fLeGjb7u4uXqeF9q/ArcGIS/rest/services";
 const CARTO   = "https://phl.carto.com/api/v2/sql";
+// The City retired opa_properties_public_pde (still listed, but every query returns
+// "Invalid URL") and republished parcels as OPA_PROPERTIES_PUBLIC. The new layer has
+// no geocode_lat/lon or council_district_* columns; see enrichOPARow().
+const OPA_LAYER = "OPA_PROPERTIES_PUBLIC";
 const TABS    = ['inspect','drift','brief','records','limits','council'];
 const PHILLY_TIME_ZONE = "America/New_York";
 const PHILLY_DATE_FORMAT = new Intl.DateTimeFormat("en-US",{
@@ -1894,17 +1898,19 @@ function assertOPA(opa){ if(!/^\d{6,12}$/.test(opa)) throw new Error("Invalid OP
 async function queryAndScoreAddress(addr,patterns,limit){
   const settled=await Promise.allSettled(patterns.map(p=>{
     const where=`UPPER(location) LIKE '${sqlSafeStr(p)}'`;
-    return eclipseQuery("opa_properties_public_pde",where,
+    return eclipseQuery(OPA_LAYER,where,
       "parcel_number,location,owner_1,market_value,year_built,zip_code,zoning,census_tract",
       `&resultRecordCount=${limit}`);
   }));
-  // One failing pattern shouldn't sink the lookup, but if EVERY pattern failed
-  // the API is down — throw so the caller shows "resolution failed" instead of
-  // the misleading definitive "No OPA parcel matches".
+  // One failing pattern shouldn't sink the lookup. If EVERY pattern failed the
+  // ArcGIS layer is down: remember why, and let the Carto mirror below try. Only
+  // throw (instead of the misleading definitive "No OPA parcel matches") if Carto
+  // also fails.
   const results=settled.filter(s=>s.status==="fulfilled").map(s=>s.value);
+  let arcgisDown=null;
   if(!results.length&&settled.length){
     const reason=settled[0].reason;
-    throw (reason instanceof Error)?reason:new Error("Address search failed");
+    arcgisDown=(reason instanceof Error)?reason:new Error("Address search failed");
   }
   const seen=new Set();
   const deduped=results.flat().filter(r=>{
@@ -1920,6 +1926,7 @@ async function queryAndScoreAddress(addr,patterns,limit){
   if(!scored.some(x=>x.s>=0.9)){
     const cr=await Promise.allSettled(patterns.map(p=>
       cartoOPAQuery(`UPPER(location) LIKE '${sqlSafeStr(p)}'`,limit)));
+    if(arcgisDown&&!cr.some(s=>s.status==="fulfilled")) throw arcgisDown;
     const have=new Set(scored.map(x=>x.r.parcel_number));
     cr.filter(s=>s.status==="fulfilled").flatMap(s=>s.value).forEach(r=>{
       if(have.has(r.parcel_number)) return;
@@ -1971,12 +1978,34 @@ async function cartoOPAQuery(where,limit){
 }
 async function getOPADetails(opa){
   assertOPA(opa);
-  const rows=await eclipseQuery("opa_properties_public_pde",`parcel_number='${opa}'`,"*");
-  if(rows[0]) return rows[0];
+  const rows=await eclipseQuery(OPA_LAYER,`parcel_number='${opa}'`,"*");
+  if(rows[0]) return enrichOPARow(rows[0]);
   // No .catch: a Carto outage must not read as "parcel not found" (which tells the
   // user the parcel was re-numbered). Callers that tolerate failure already catch.
   const c=await cartoOPAQuery(`parcel_number='${opa}'`,1);
-  return c[0]||null;
+  return c[0]?enrichOPARow(c[0]):null;
+}
+
+// OPA_PROPERTIES_PUBLIC carries no coordinates or council districts, but the app's
+// map link, nearest-parcel fallback and Council tab all read them off the OPA row.
+// Coordinates come from Carto's the_geom; the district from a point-in-polygon hit
+// on Council_Districts_2024. Best effort: a failure here leaves the fields unset
+// (the Council tab already says "district not available") and never fails a lookup.
+async function enrichOPARow(row){
+  try{
+    if(row.geocode_lat==null||row.geocode_lon==null){
+      const c=await cartoOPAQuery(`parcel_number='${sqlSafeStr(String(row.parcel_number))}'`,1);
+      if(c[0]){ row.geocode_lat=c[0].geocode_lat; row.geocode_lon=c[0].geocode_lon; }
+    }
+    const lat=Number(row.geocode_lat), lng=Number(row.geocode_lon);
+    if(row.council_district_2024==null&&Number.isFinite(lat)&&Number.isFinite(lng)){
+      const url=`${ECLIPSE}/Council_Districts_2024/FeatureServer/0/query?geometry=${lng},${lat}&geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects&inSR=4326&outFields=district_num&returnGeometry=false&f=json&resultRecordCount=1`;
+      const j=await fetchJsonRetry(url,"Eclipse council district",j=>j.error?{transient:false,text:String(j.error.message||"error")}:null);
+      const d=j.features?.[0]?.attributes?.district_num;
+      if(d!=null) row.council_district_2024=d;
+    }
+  }catch(e){ /* best effort */ }
+  return row;
 }
 
 // Find other parcels held under an owner name. `mode` is 'exact' (owner_1
@@ -1989,7 +2018,7 @@ async function getOwnerProperties(ownerName,mode){
   const where=mode==="similar"
     ? `owner_1 LIKE '${sqlSafeStr(name).toUpperCase()}%'`
     : `owner_1='${safe}'`;
-  const rows=await eclipseQuery("opa_properties_public_pde",where,
+  const rows=await eclipseQuery(OPA_LAYER,where,
     "parcel_number,location,owner_1,market_value,zip_code","&resultRecordCount=200");
   return rows;
 }
@@ -2199,12 +2228,11 @@ async function getBuildingCerts(loc){
 // ---- OPA fallback: spatial + historical resolution ----
 async function nearestOPAByCoords(lat,lng){
   const d=0.0004;
-  const where=`geocode_lat>${lat-d} AND geocode_lat<${lat+d} AND geocode_lon>${lng-d} AND geocode_lon<${lng+d}`;
+  // Carto's the_geom stands in for the geocode_lat/lon columns the new ArcGIS layer lacks.
   // Fetch enough candidates that the true nearest is in the set (a block face can
   // hold many parcels), then rank by real great-circle distance in meters.
-  const rows=await eclipseQuery("opa_properties_public_pde",where,
-    "parcel_number,location,owner_1,market_value,year_built,zip_code,geocode_lat,geocode_lon,council_district_2024,council_district_2016,zoning,census_tract",
-    "&resultRecordCount=50").catch(()=>[]);
+  const rows=await cartoOPAQuery(
+    `the_geom && ST_MakeEnvelope(${lng-d},${lat-d},${lng+d},${lat+d},4326)`,50).catch(()=>[]);
   if(!rows.length) return null;
   rows.forEach(r=>{
     const rlat=Number(r.geocode_lat), rlng=Number(r.geocode_lon);
