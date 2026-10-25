@@ -177,7 +177,7 @@ function propertyPage(p) {
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<script>(function(){try{if(localStorage.getItem('4p-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<script>(function(){var t=null;try{t=localStorage.getItem('4p-theme');}catch(e){}if(t!=='light')document.documentElement.setAttribute('data-theme','dark');})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,follow">
 <title>${esc(title)}</title>
@@ -323,7 +323,7 @@ function hubPage(props) {
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<script>(function(){try{if(localStorage.getItem('4p-theme')==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+<script>(function(){var t=null;try{t=localStorage.getItem('4p-theme');}catch(e){}if(t!=='light')document.documentElement.setAttribute('data-theme','dark');})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,follow">
 <title>Philadelphia Property Record Snapshots | 4PHILLY</title>
