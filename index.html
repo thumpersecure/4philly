@@ -1677,13 +1677,27 @@ function setNow(){
 setNow();
 
 // ---- API ----
+// Reject if `p` has not settled in `ms`, so a stalled City server ends in an
+// error banner instead of an endless "Looking up...".
+function withDeadline(p, ms, what){
+  let t;
+  const timeout=new Promise((_,rej)=>{ t=setTimeout(()=>rej(new Error(`${what} is taking too long - the City's data server is slow or not responding. Try again shortly.`)),ms); });
+  return Promise.race([p,timeout]).finally(()=>clearTimeout(t));
+}
+// After 8s of waiting, tell the user it's the City's server, not the page.
+function startSlowHint(seq){
+  const t=setTimeout(()=>{ if(seq===lookupSeq) banner("The City's data server is slow right now - still trying...",false); },8000);
+  return ()=>clearTimeout(t);
+}
 // The City's servers are sometimes very slow (20-30s+) or return an error object
 // with no message. One hung request used to freeze the whole lookup, so every
 // lookup request now times out and retries. `inspect(json)` may return
 // {text, transient} for an error payload inside a 200 response.
-async function fetchJsonRetry(url, label, inspect, {timeoutMs=25000, retries=2}={}){
+async function fetchJsonRetry(url, label, inspect, {timeoutMs=12000, retries=1}={}){
   let lastProblem="";
+  const deadline=Date.now()+30000; // hard cap per call, whatever the retry settings
   for(let attempt=0; attempt<=retries; attempt++){
+    if(attempt>0&&Date.now()>deadline) break;
     const ac=new AbortController();
     const timer=setTimeout(()=>ac.abort(),timeoutMs);
     try{
@@ -1734,7 +1748,7 @@ async function eclipseQuery(layer, where, fields="*", extra=""){
     const j=await eclipseFetchPage(layer,`${base}${extra}`);
     return (j.features||[]).map(f=>f.attributes);
   }
-  const PAGE=2000, MAX_PAGES=25;
+  const PAGE=2000, MAX_PAGES=5;
   const out=[]; let offset=0, truncated=false;
   for(let page=0;page<MAX_PAGES;page++){
     const j=await eclipseFetchPage(layer,`${base}&resultRecordCount=${PAGE}&resultOffset=${offset}${extra}`);
@@ -1780,14 +1794,17 @@ function normalizeAddr(raw){
   return String(raw||'').trim().toUpperCase()
     .replace(/#\s*[\w-]+/g,' ')                              // "#2B" unit
     .replace(/\b\d+(?:ST|ND|RD|TH)\s+(?:FL|FLOOR)\b/g,' ')   // "2ND FL"
+    .replace(/,\s*(?:PHILADELPHIA|PHILA|PHILLY)\b.*$/,'')
+    .replace(/\bJFK\b/g,'JOHN F KENNEDY')
     .replace(/[.,]/g,' ')
     .replace(/[#%_]/g,'')
-    .replace(/\b(APT|UNIT|STE|SUITE|FL|FLOOR|RM|ROOM)\b\s*[\w-]*/g,'')
     .replace(/\s+/g,' ').trim()
     // Pasted full addresses: drop trailing city / state / zip.
-    .replace(/\s+(?:PHILADELPHIA|PHILA|PHILLY)\b.*$/,'')
+    .replace(/\s+(?:PHILADELPHIA|PHILA|PHILLY)\s+(?:PA|\d{5})\b.*$/,'')
+    .replace(/^(\d.*\s\S+\s\S+)\s+(?:PHILADELPHIA|PHILA|PHILLY)$/,'$1')
     .replace(/\s+PA\b(?:\s+\d{5}(?:-\d{4})?)?$/,'')
     .replace(/\s+\d{5}(?:-\d{4})?$/,'')
+    .replace(/\s+(?:APT|UNIT|STE|SUITE|FL|FLOOR|RM|ROOM)\s+(?:[\w-]*\d[\w-]*|[A-Z])$/,'')
     .trim();
 }
 function sqlSafeStr(s){
@@ -1874,7 +1891,11 @@ function scoreAddressMatch(input,loc){
   // street names, so "315-23" isn't treated as a street-name token.
   const nameI=ti.slice(inNum?1:0).filter(dropSD).map(ordNorm);
   const setL=new Set(tl.slice(locNum?1:0).filter(dropSD).map(ordNorm));
-  if(nameI.length){ score+=0.3*(nameI.filter(t=>setL.has(t)).length/nameI.length); }
+  if(nameI.length){
+    const hit=nameI.filter(t=>setL.has(t)).length;
+    if(hit===0) return Math.min(score,0.4); // no street-name token in common (e.g. 5TH vs 25TH)
+    score+=0.3*(hit/nameI.length);
+  }
   else { score+=0.3; }
   const dirI=ti.filter(t=>DIR_CANON[t]).map(t=>DIR_CANON[t]);
   const dirL=new Set(tl.filter(t=>DIR_CANON[t]).map(t=>DIR_CANON[t]));
@@ -2193,10 +2214,14 @@ async function getBuildingCertsStatic(loc){
     Object.defineProperty(none,"_static",{value:{generated:null,summary:{}},enumerable:false});
     return none;
   }
-  const [res,metaRes]=await Promise.all([
-    fetch(`data/certs/${file}.json`),
-    fetch("data/certs/meta.json").catch(()=>null)
-  ]);
+  const certAc=new AbortController(); const certTimer=setTimeout(()=>certAc.abort(),10000);
+  let res,metaRes;
+  try{
+    [res,metaRes]=await Promise.all([
+      fetch(`data/certs/${file}.json`,{signal:certAc.signal}),
+      fetch("data/certs/meta.json",{signal:certAc.signal}).catch(()=>null)
+    ]);
+  }finally{ clearTimeout(certTimer); }
   let rows=[],bins={};
   if(res.ok){
     const j=await res.json();
@@ -3954,6 +3979,8 @@ async function lookup(opa){
   const seq = ++lookupSeq;
   currentRecord=null;
   setLookupBusy(true);
+  const stopSlowHint=startSlowHint(seq);
+  try{ // starts right after setLookupBusy so ANY throw below still reaches finally{}
   updateLookupProgress(seq,10,"Requesting property records...");
   const newHash=`#opa=${opa}`;
   if(location.hash!==newHash) history.replaceState(null,'',newHash);
@@ -3966,17 +3993,16 @@ async function lookup(opa){
   clearRenderedPanels();
   banner("Looking up records...");
 
-  try{
-    let cartoLicFailed=false,cartoViolFailed=false,permitsFailed=false,t311Failed=false,bcertsFailed=false;
-    let [opaRow,lic,licC,ovE,allViol,cartoVDist,permits]=await Promise.all([
+    let cartoLicFailed=false,cartoViolFailed=false,permitsFailed=false,t311Failed=false,bcertsFailed=false,licFailed=false,violFailed=false;
+    let [opaRow,lic,licC,ovE,allViol,cartoVDist,permits]=await withDeadline(Promise.all([
       getOPADetails(opa),
-      getBusinessLicenses(opa),
+      getBusinessLicenses(opa).catch(e=>{console.warn("licenses failed",e);licFailed=true;return [];}),
       getCartoBusinessLicenses(opa).catch(()=>{cartoLicFailed=true;return [];}),
-      getOpenViolations(opa),
-      getAllViolations(opa),
+      getOpenViolations(opa).catch(e=>{console.warn("open violations failed",e);violFailed=true;return [];}),
+      getAllViolations(opa).catch(e=>{console.warn("violations failed",e);violFailed=true;return [];}),
       getCartoViolationCount(opa).catch(()=>{cartoViolFailed=true;return [];}),
       getPermits(opa).catch(()=>{permitsFailed=true;return [];})
-    ]);
+    ]),60000,"Property lookup");
 
     // Abort if a newer lookup has started
     if(seq !== lookupSeq) return;
@@ -4013,15 +4039,15 @@ async function lookup(opa){
         const newHash=`#opa=${newOPA}`;
         if(location.hash!==newHash) history.replaceState(null,'',newHash);
         $("#opa").value=newOPA;
-        cartoLicFailed=false;cartoViolFailed=false;permitsFailed=false; // flags describe the parcel actually shown
-        [lic,licC,ovE,allViol,cartoVDist,permits]=await Promise.all([
-          getBusinessLicenses(newOPA),
+        cartoLicFailed=false;cartoViolFailed=false;permitsFailed=false;licFailed=false;violFailed=false; // flags describe the parcel actually shown
+        [lic,licC,ovE,allViol,cartoVDist,permits]=await withDeadline(Promise.all([
+          getBusinessLicenses(newOPA).catch(e=>{console.warn("licenses failed",e);licFailed=true;return [];}),
           getCartoBusinessLicenses(newOPA).catch(()=>{cartoLicFailed=true;return [];}),
-          getOpenViolations(newOPA),
-          getAllViolations(newOPA),
+          getOpenViolations(newOPA).catch(e=>{console.warn("open violations failed",e);violFailed=true;return [];}),
+          getAllViolations(newOPA).catch(e=>{console.warn("violations failed",e);violFailed=true;return [];}),
           getCartoViolationCount(newOPA).catch(()=>{cartoViolFailed=true;return [];}),
           getPermits(newOPA).catch(()=>{permitsFailed=true;return [];})
-        ]);
+        ]),60000,"Property lookup");
         if(seq !== lookupSeq) return;
       }else{
         $("#prophead").style.display="none";
@@ -4045,10 +4071,10 @@ async function lookup(opa){
     renderProphead(opa,opaRow);
     updateLookupProgress(seq,76,"Loading supplemental records...");
 
-    let [t311,bcerts]=await Promise.all([
+    let [t311,bcerts]=await withDeadline(Promise.all([
       get311ForAddress(opaRow.location||"").catch(e=>{console.warn("311 fetch failed",e);t311Failed=true;return [];}),
       getBuildingCerts(opaRow.location||"").catch(e=>{console.warn("building certs failed",e);bcertsFailed=true;return [];})
-    ]);
+    ]),45000,"311 and certification lookup");
     if(t311&&t311._partial) t311Failed=true;
     if(bcerts&&bcerts._partial) bcertsFailed=true;
     // Enforce the 24-month 311 window ONCE, here, so every consumer (KPI tile,
@@ -4090,6 +4116,8 @@ async function lookup(opa){
     currentRecord={opa,opaRow,lic,openViol:ovE,allViol,t311,permits,bcerts,licenseSummary,scoreData,fetchedAt:Date.now()};
 
     const failedData=[];
+    if(licFailed) failedData.push("business licenses");
+    if(violFailed) failedData.push("violations");
     if(t311Failed) failedData.push("311 complaints");
     if(bcertsFailed) failedData.push("building certifications");
     if(permitsFailed) failedData.push("permits");
@@ -4119,6 +4147,7 @@ async function lookup(opa){
     completeLookupProgress(seq,"Lookup failed.",{error:true});
     banner(`Lookup failed: ${esc(err.message)}. The Eclipse or Carto endpoint may be unreachable. Try again.`,true);
   }finally{
+    stopSlowHint();
     if(seq===lookupSeq) setLookupBusy(false);
   }
 }
@@ -4197,14 +4226,15 @@ $("#go").addEventListener("click",async()=>{
   hideLookupProgressNow();
   updateLookupProgress(seq,8,"Resolving address to an OPA parcel...");
   banner("Resolving address against OPA layer…");
+  const stopSlowHint=startSlowHint(seq);
   try{
     let matchSource='address';
-    let matches=await resolveAddress(addr);
+    let matches=await withDeadline(resolveAddress(addr),60000,"Address search");
     if(seq!==lookupSeq){ return; }
-    if(matches.length===0){
+    if(matches.length===0&&!/^\d/.test(addr)){ // plain street addresses (start with a house number) skip the business-name guess
       updateLookupProgress(seq,40,"Trying building name search...");
       matchSource='building';
-      matches=await resolveByBuildingName(addr).catch(()=>[]);
+      matches=await withDeadline(resolveByBuildingName(addr),30000,"Building name search").catch(()=>[]);
       if(seq!==lookupSeq){ return; }
     }
     if(matches.length===0){
@@ -4271,6 +4301,7 @@ $("#go").addEventListener("click",async()=>{
     completeLookupProgress(seq,"Address resolution failed.",{error:true});
     banner(`Address resolution failed: ${esc(err.message)}`,true);
   }finally{
+    stopSlowHint();
     if(seq===lookupSeq) setLookupBusy(false);
   }
   }finally{
