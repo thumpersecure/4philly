@@ -299,6 +299,7 @@ ${violRows}
 
   <p class="foot"><a href="./">← All property snapshots</a> · <a href="/">Search any address</a> · <a href="/blog/">Guides &amp; articles</a></p>
 </div>
+<script>new Image().src='https://srv1540509.hstgr.cloud/p.gif?s=4philly&p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer)</script>
 </body>
 </html>
 `;
@@ -394,6 +395,7 @@ ${sections}
 
   <p class="foot"><a href="/">4philly.net home</a> · <a href="/blog/">Guides &amp; articles</a> · <a href="/privacy.html">Privacy Policy</a></p>
 </div>
+<script>new Image().src='https://srv1540509.hstgr.cloud/p.gif?s=4philly&p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer)</script>
 </body>
 </html>
 `;
