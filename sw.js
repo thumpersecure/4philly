@@ -1,4 +1,4 @@
-const CACHE = '4philly-v35';
+const CACHE = '4philly-v36';
 const STATIC = ['./', './index.html', './404.html', './manifest.json', './icon.svg', './rtk.html', './lib/theme.js', './lib/rtk-page.js'];
 // Both Google Fonts origins: the CSS from fonts.googleapis.com AND the font
 // binaries from fonts.gstatic.com. Caching only the binaries left the fonts
@@ -25,6 +25,12 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const { request } = e;
   const url = new URL(request.url);
+
+  // Video/media: bypass the SW entirely so the browser handles Range requests
+  // and streaming directly. Caching partial 206 responses would break seeking.
+  if (/\.(mp4|mov|webm)$/i.test(url.pathname)) {
+    return;
+  }
 
   // Font CSS + files: cache-first
   if (FONT_ORIGINS.includes(url.origin)) {

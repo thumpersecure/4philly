@@ -987,12 +987,40 @@
       bottom:96px !important;
     }
   }
+  /* --- intro video (Safe Healthy Homes) --- */
+  .intro-video{position:relative;margin:0 0 22px;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;justify-content:center}
+  .intro-video video{display:block;width:auto;height:auto;max-height:70vh;max-width:100%;background:#000}
+  .intro-video .iv-sound{position:absolute;right:12px;bottom:12px;display:inline-flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;letter-spacing:.04em;color:#fff;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:8px 14px;cursor:pointer;backdrop-filter:blur(4px);transition:background .15s,border-color .15s}
+  .intro-video .iv-sound:hover{background:rgba(0,0,0,.8);border-color:rgba(255,255,255,.55)}
+  .intro-video .iv-sound:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media (max-width:560px){ .intro-video{margin:0 0 18px} .intro-video video{max-height:62vh} }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">Philadelphia Apartment &amp; Landlord Record Check — 4PHILLY</h1>
+
+  <div class="intro-video">
+    <video id="intro-video" src="./media/safe-healthy-homes.mp4" poster="./media/safe-healthy-homes-poster.jpg"
+           autoplay muted loop playsinline preload="metadata" aria-label="Know your rights: Philadelphia Safe Healthy Homes"></video>
+    <button type="button" class="iv-sound" id="iv-sound" aria-pressed="false">🔇 Tap for sound</button>
+  </div>
+  <script>
+  (function(){
+    var v=document.getElementById('intro-video'), b=document.getElementById('iv-sound');
+    if(!v||!b) return;
+    // Respect reduced-motion: don't autoplay, show poster instead.
+    try{ if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){ v.removeAttribute('autoplay'); v.pause(); } }catch(e){}
+    function sync(){ var on=!v.muted; b.textContent=on?'🔊 Sound on':'🔇 Tap for sound'; b.setAttribute('aria-pressed',on?'true':'false'); }
+    b.addEventListener('click', function(){
+      v.muted=!v.muted;
+      if(!v.muted){ v.volume=1; var p=v.play(); if(p&&p.catch) p.catch(function(){}); }
+      sync();
+    });
+    sync();
+  })();
+  </script>
 
   <header class="top">
     <div>
